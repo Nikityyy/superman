@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Superman | The Man of Steel</title>
+
+    <!-- 1. Include Lenis for Smooth Scrolling -->
+    <script src="https://unpkg.com/@studio-freight/lenis@1.0.33/dist/lenis.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vanta@latest/dist/vanta.clouds.min.js"></script>
+    <link rel="stylesheet" href="assets/styles.css">
+</head>
+
+<body>
+
+    <!-- LOADING SCREEN -->
+    <div id="loader">
+        <div class="loader-content">
+            <img src="images/superman-logo.avif" alt="Loading..." class="loader-logo-img">
+            <div class="loader-bar-container">
+                <div class="loader-bar" id="progressBar"></div>
+            </div>
+            <div class="loader-text">Initializing Fortress</div>
+        </div>
+    </div>
+
+    <!-- BACKGROUND MOVING TEXT -->
+    <div class="marquee-container" aria-hidden="true">
+        <div class="marquee-line left-to-right">
+            <div class="marquee-track">
+                <span class="marquee-text">MAN OF STEEL SUPERMAN MAN OF STEEL SUPERMAN</span>
+                <span class="marquee-text">MAN OF STEEL SUPERMAN MAN OF STEEL SUPERMAN</span>
+            </div>
+            <div class="marquee-track">
+                <span class="marquee-text">MAN OF STEEL SUPERMAN MAN OF STEEL SUPERMAN</span>
+                <span class="marquee-text">MAN OF STEEL SUPERMAN MAN OF STEEL SUPERMAN</span>
+            </div>
+        </div>
+        <div class="marquee-line right-to-left">
+            <div class="marquee-track">
+                <span class="marquee-text">KAL-EL KRYPTON HOPE KAL-EL KRYPTON HOPE</span>
+                <span class="marquee-text">KAL-EL KRYPTON HOPE KAL-EL KRYPTON HOPE</span>
+            </div>
+            <div class="marquee-track">
+                <span class="marquee-text">KAL-EL KRYPTON HOPE KAL-EL KRYPTON HOPE</span>
+                <span class="marquee-text">KAL-EL KRYPTON HOPE KAL-EL KRYPTON HOPE</span>
+            </div>
+        </div>
+        <div class="marquee-line left-to-right">
+            <div class="marquee-track">
+                <span class="marquee-text">MAN OF STEEL SUPERMAN MAN OF STEEL SUPERMAN</span>
+                <span class="marquee-text">MAN OF STEEL SUPERMAN MAN OF STEEL SUPERMAN</span>
+            </div>
+            <div class="marquee-track">
+                <span class="marquee-text">MAN OF STEEL SUPERMAN MAN OF STEEL SUPERMAN</span>
+                <span class="marquee-text">MAN OF STEEL SUPERMAN MAN OF STEEL SUPERMAN</span>
+            </div>
+        </div>
+        <div class="marquee-line right-to-left">
+            <div class="marquee-track">
+                <span class="marquee-text">KAL-EL KRYPTON HOPE KAL-EL KRYPTON HOPE</span>
+                <span class="marquee-text">KAL-EL KRYPTON HOPE KAL-EL KRYPTON HOPE</span>
+            </div>
+            <div class="marquee-track">
+                <span class="marquee-text">KAL-EL KRYPTON HOPE KAL-EL KRYPTON HOPE</span>
+                <span class="marquee-text">KAL-EL KRYPTON HOPE KAL-EL KRYPTON HOPE</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- MAIN SCROLLABLE AREA -->
+    <div class="scroll-height">
+        <div class="sticky-container">
+            <div id="canvas-wrapper">
+                <div id="logo">
+                    <span class="name-clark">CLARK KENT</span>
+                    <span class="name-super">SUPERMAN</span>
+                </div>
+                <canvas id="mainCanvas"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- CONTENT SECTION -->
+    <section class="content-section">
+        <img src="images/superman-logo.avif" alt="S Shield" class="parallax-logo" id="parallaxLogo">
+
+        <div class="text-block">
+            <span>THE</span>
+            <span>MAN</span>
+            <span>OF</span>
+            <span>STEEL</span>
+        </div>
+    </section>
+
+    <!-- HORIZONTAL SCROLL SECTION -->
+    <section class="horiz-container">
+        <div class="horiz-sticky">
+            <div class="horiz-track" id="track">
+
+                <!-- CARD 1 -->
+                <div class="h-item">
+                    <div class="h-meta">Smallville, 1993</div>
+                    <div class="h-img-box">
+                        <div class="h-img-inner">
+                            <img src="images/smallville.avif" alt="Kansas Fields" class="parallax-img">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- CARD 2 (Quote) -->
+                <div class="h-item h-quote">
+                    <p>"I'm As <em>Human</em> As Anyone."</p>
+                    <div class="h-meta" style="margin-top: 20px; border:none;">— Kal-El</div>
+                </div>
+
+                <!-- CARD 3 -->
+                <div class="h-item">
+                    <div class="h-meta">Metropolis, 2025</div>
+                    <div class="h-img-box">
+                        <div class="h-img-inner">
+                            <img src="images/metropolis.avif" alt="Superman in Metropolis" class="parallax-img">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- CARD 4 -->
+                <div class="h-item">
+                    <div class="h-meta">Fortress of Solitude, 2025</div>
+                    <div class="h-img-box">
+                        <div class="h-img-inner">
+                            <img src="images/fortress.avif" alt="The Arctic" class="parallax-img">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- CARD 5 (Quote) -->
+                <div class="h-item h-quote">
+                    <p>Maybe That's the Real <em>Punk Rock</em>.</p>
+                    <div class="h-meta" style="margin-top: 20px; border:none;">— Kal-El</div>
+                </div>
+
+                <!-- CARD 6 -->
+                <div class="h-item" style="width: 700px">
+                    <div class="h-meta">Justice Gang, 2025</div>
+                    <div class="h-img-box">
+                        <div class="h-img-inner">
+                            <img src="images/justice-gang.avif" alt="The Justice Gang" class="parallax-img">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- End Spacer -->
+                <div class="h-item" style="width: 20vw;"></div>
+
+            </div>
+        </div>
+    </section>
+
+    <!-- DUEL SECTION (Lando Style) -->
+    <section class="duel-section">
+        <div class="duel-sticky-wrapper">
+
+            <!-- Centered Massive Text -->
+            <div class="duel-center-text">
+                <div class="duel-big-row text-kal">
+                    <span class="duel-scribble scribble-kal">Savior</span>
+                    KAL-EL
+                </div>
+                <div class="duel-big-row text-lex">
+                    <span class="duel-scribble scribble-lex">Genius</span>
+                    LUTHOR
+                </div>
+            </div>
+
+            <!-- Sliding Images (Scroll Driven) -->
+            <img src="images/kal-el-side.avif" alt="Superman Profile" class="duel-side-img img-kal">
+            <img src="images/lex-side.avif" alt="Lex Luthor Profile" class="duel-side-img img-lex">
+
+        </div>
+    </section>
+
+    <!-- FOOTER -->
+    <div
+        style="height: 50vh; display:flex; justify-content:center; align-items:center; background:#000; position:relative; z-index:40;">
+        <p style="color:#333; letter-spacing: 2px;">© KRYPTONIAN ARCHIVES</p>
+    </div>
+
+    <script src="assets/script.js"></script>
+</body>
+
+</html>

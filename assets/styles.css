@@ -1,0 +1,604 @@
+        @font-face {
+            font-family: 'CC Ultimatum';
+            src: url('../fonts/cc-ultimatum-bold.otf') format('opentype');
+            font-weight: bold;
+            font-style: normal;
+        }
+
+        :root {
+            --bg-color: #0b0b0b;
+            --text-color: #fff;
+            --marquee-stroke: #333;
+            --accent-red: #e2001a;
+            --accent-yellow: #f5e400;
+            --accent-purple: #5d2f8e;
+            --card-width: 400px;
+            --card-height: 550px;
+
+            /* Calculated end color of horizontal section */
+            --bright-bg: #bfcad1;
+            --dark-text: #1a1a1a;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: var(--bg-color);
+            font-family: 'CC Ultimatum', sans-serif;
+            color: var(--text-color);
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+            overflow-x: hidden;
+            overflow-y: auto;
+        }
+
+        body::-webkit-scrollbar {
+            display: none;
+        }
+
+        /* --- LOADING SCREEN --- */
+        #loader {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100vh;
+            background-color: #000;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            transition: opacity 0.8s ease-in-out, visibility 0.8s;
+        }
+
+        .loader-content {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2rem;
+            transform: scale(1);
+            transition: transform 0.8s cubic-bezier(0.7, 0, 0.3, 1);
+        }
+
+        .loader-logo-img {
+            width: 120px;
+            height: auto;
+            filter: drop-shadow(0 0 10px rgba(226, 0, 26, 0.3));
+            animation: breathe 3s ease-in-out infinite;
+        }
+
+        .loader-bar-container {
+            width: 200px;
+            height: 2px;
+            background: #333;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .loader-bar {
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 100%;
+            width: 0%;
+            background-color: var(--accent-red);
+            box-shadow: 0 0 10px var(--accent-red);
+            transition: width 0.1s linear;
+        }
+
+        .loader-text {
+            font-family: 'CC Ultimatum', sans-serif;
+            font-size: 14px;
+            letter-spacing: 4px;
+            color: #666;
+            margin-top: 10px;
+            text-transform: uppercase;
+            animation: textFade 2s infinite alternate;
+        }
+
+        body.loaded #loader {
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+        }
+
+        body.loaded #loader .loader-content {
+            transform: scale(1.5);
+        }
+
+        @keyframes breathe {
+
+            0%,
+            100% {
+                transform: scale(1);
+                filter: drop-shadow(0 0 15px rgba(226, 0, 26, 0.2));
+                opacity: 0.8;
+            }
+
+            50% {
+                transform: scale(1.05);
+                filter: drop-shadow(0 0 25px rgba(226, 0, 26, 0.6));
+                opacity: 1;
+            }
+        }
+
+        @keyframes textFade {
+            from {
+                opacity: 0.3;
+            }
+
+            to {
+                opacity: 0.8;
+            }
+        }
+
+        /* --- FIXED MARQUEE BACKGROUND --- */
+        .marquee-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100vh;
+            z-index: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            gap: 2rem;
+            pointer-events: none;
+            opacity: 0.3;
+            overflow: hidden;
+        }
+
+        .marquee-line {
+            display: flex;
+            width: 100%;
+            overflow: hidden;
+            transform: rotate(-2deg) scale(1.1);
+            will-change: transform;
+            padding-bottom: 5vw;
+        }
+
+        .marquee-track {
+            display: flex;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+
+        .marquee-text {
+            font-size: 8vw;
+            font-weight: 900;
+            color: transparent;
+            -webkit-text-stroke: 2px var(--marquee-stroke);
+            padding-right: 2rem;
+            display: block;
+            line-height: 1.1;
+        }
+
+        @keyframes scrollLeft {
+            from {
+                transform: translateX(0);
+            }
+
+            to {
+                transform: translateX(-100%);
+            }
+        }
+
+        @keyframes scrollRight {
+            from {
+                transform: translateX(-100%);
+            }
+
+            to {
+                transform: translateX(0);
+            }
+        }
+
+        .left-to-right .marquee-track {
+            animation: scrollRight 30s linear infinite;
+        }
+
+        .right-to-left .marquee-track {
+            animation: scrollLeft 30s linear infinite;
+        }
+
+        /* --- FOREGROUND CONTENT --- */
+        .scroll-height {
+            height: 250vh;
+            position: relative;
+            z-index: 10;
+        }
+
+        .sticky-container {
+            position: sticky;
+            top: 0;
+            width: 100%;
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        #canvas-wrapper {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            will-change: transform, width, height, border-radius;
+            transform: translateZ(0);
+        }
+
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+
+        /* LOGO STYLES */
+        #logo {
+            position: absolute;
+            top: 40px;
+            left: 40px;
+            font-size: 48px;
+            font-weight: bold;
+            z-index: 20;
+            letter-spacing: 2px;
+            mix-blend-mode: overlay;
+            pointer-events: none;
+            display: grid;
+            grid-template-areas: "stack";
+        }
+
+        #logo span {
+            grid-area: stack;
+            display: block;
+            color: #fff;
+            transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+            will-change: transform, opacity, filter;
+        }
+
+        .name-clark {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+            filter: blur(0px);
+        }
+
+        .name-super {
+            opacity: 0;
+            transform: translateY(10px) scale(1.1);
+            filter: blur(10px);
+        }
+
+        #logo.is-revealed .name-clark {
+            opacity: 0;
+            transform: translateY(-10px) scale(0.9);
+            filter: blur(10px);
+        }
+
+        #logo.is-revealed .name-super {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+            filter: blur(0px);
+        }
+
+        /* --- SECTIONS --- */
+        .content-section {
+            position: relative;
+            z-index: 10;
+            background-color: var(--bg-color);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 100px 20px;
+            min-height: 80vh;
+            overflow: hidden;
+            border-bottom: 1px solid #333;
+        }
+
+        .parallax-logo {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 40vw;
+            max-width: 800px;
+            transform: translate(-50%, -50%);
+            z-index: 0;
+            opacity: 1.0;
+            pointer-events: none;
+            will-change: transform;
+            mix-blend-mode: soft-light;
+        }
+
+        .text-block {
+            position: relative;
+            z-index: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            line-height: 1.6;
+            font-family: sans-serif;
+            font-size: 1.2rem;
+            color: #ccc;
+        }
+
+        .text-block span {
+            font-family: 'CC Ultimatum', sans-serif;
+            color: #fff;
+            font-size: clamp(6rem, 16vw, 16rem);
+            text-align: center;
+            line-height: 1.0;
+        }
+
+        /* --- HORIZONTAL SCROLL SECTION --- */
+        .horiz-container {
+            height: 500vh;
+            position: relative;
+            z-index: 20;
+        }
+
+        .horiz-track {
+            display: flex;
+            gap: 15vw;
+            padding-left: 10vw;
+            will-change: transform;
+
+            /* ADD THESE LINES to ensure cards float above clouds */
+            position: relative;
+            z-index: 5;
+        }
+
+        /* Ensure the sticky container positions the canvas correctly */
+        .horiz-sticky {
+            /* Existing styles... */
+            position: sticky;
+            top: 0;
+            height: 100vh;
+            width: 100%;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+
+            /* ADD THIS to ensure canvas stays behind */
+            z-index: 1;
+        }
+
+        .horiz-sticky::after {
+            content: '';
+            position: absolute;
+            bottom: -1px;
+            /* Overlap slightly to prevent 1px gap lines */
+            left: 0;
+            width: 100%;
+            height: 40vh;
+            /* The height of the fade - taller is smoother */
+
+            /* Gradient: Transparent -> The Gray/Blue color of the next section */
+            background: linear-gradient(to bottom, rgba(191, 202, 209, 0) 0%, #bfcad1 100%);
+
+            /* Z-Index: 2
+       1 = Vanta Clouds
+       2 = This Fog Gradient
+       5 = The Cards/Content (so content stays sharp) 
+    */
+            z-index: 2;
+            pointer-events: none;
+        }
+
+        .h-item {
+            position: relative;
+            flex-shrink: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            width: var(--card-width);
+            transition: transform 0.1s linear;
+        }
+
+        .h-item:nth-child(even) {
+            transform: translateY(15%);
+        }
+
+        .h-meta {
+            font-family: 'CC Ultimatum', sans-serif;
+            font-size: 0.8rem;
+            letter-spacing: 2px;
+            color: #0d1e30;
+            margin-bottom: 1rem;
+            text-transform: uppercase;
+            border-bottom: 1px solid #0d1e30;
+            padding-bottom: 5px;
+            width: fit-content;
+            transition: transform 0.3s ease;
+        }
+
+        .h-img-box {
+            width: 100%;
+            height: var(--card-height);
+            overflow: hidden;
+            position: relative;
+            background-color: #1a1a1a;
+            border-radius: 4px;
+        }
+
+        .h-img-inner {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            display: block;
+        }
+
+        .h-img-inner img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.8s ease, filter 0.5s ease;
+            filter: grayscale(80%);
+            transform: scale(1.1);
+        }
+
+        .h-img-box:hover .h-img-inner img {
+            filter: grayscale(0%);
+        }
+
+        .h-quote {
+            width: 35vw;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .h-quote p {
+            font-family: 'Times New Roman', serif;
+            font-size: clamp(2rem, 4vw, 4rem);
+            line-height: 1.1;
+            color: #0b0b0b;
+            margin: 0;
+            transition: transform 0.3s ease;
+        }
+
+        .h-quote p em {
+            color: #cd0000;
+            font-style: italic;
+            text-shadow: 0 0 2px rgba(255, 255, 255, 0.5);
+        }
+
+        /* --- DUEL SECTION (Lando Style) --- */
+        .duel-section {
+            margin-top: -1px;
+            position: relative;
+            z-index: 30;
+            background-color: var(--bright-bg);
+            /* Continues color from horizontal end */
+            color: var(--dark-text);
+            width: 100%;
+            overflow: hidden;
+        }
+
+        .duel-sticky-wrapper {
+            position: sticky;
+            top: 0;
+            height: 100vh;
+            width: 100%;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* Centered Typography */
+        .duel-center-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 10;
+            text-align: center;
+            width: 100%;
+            pointer-events: none;
+        }
+
+        .duel-big-row {
+            display: block;
+            font-size: 16vw;
+            line-height: 0.8;
+            font-weight: 900;
+            text-transform: uppercase;
+            white-space: nowrap;
+            position: relative;
+            opacity: 0;
+            transform: translateY(100px);
+            will-change: transform, opacity;
+        }
+
+        .text-kal {
+            color: var(--dark-text);
+        }
+
+        .text-lex {
+            color: var(--dark-text);
+        }
+
+        /* Scribble Accents */
+        .duel-scribble {
+            font-family: 'Brush Script MT', cursive;
+            font-size: 4vw;
+            position: absolute;
+            z-index: 12;
+            white-space: nowrap;
+            mix-blend-mode: multiply;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+
+        .scribble-kal {
+            color: var(--accent-red);
+            top: -15%;
+            left: 30%;
+            transform: rotate(-10deg);
+        }
+
+        .scribble-lex {
+            color: var(--accent-purple);
+            bottom: -30%;
+            right: 30%;
+            transform: rotate(5deg);
+        }
+
+        /* Side Images */
+        .duel-side-img {
+            position: absolute;
+            bottom: 0;
+            height: 85vh;
+            /* Very tall images */
+            width: auto;
+            max-width: 50vw;
+            z-index: 5;
+            filter: grayscale(100%) contrast(1.1);
+            transition: filter 0.4s ease, z-index 0s;
+            will-change: transform;
+            pointer-events: auto;
+            z-index: 20;
+        }
+
+        .img-kal {
+            left: 0;
+            object-position: left bottom;
+            transform: translateX(-100%);
+        }
+
+        .img-lex {
+            right: 0;
+            object-position: right bottom;
+            transform: translateX(100%);
+        }
+
+        /* Mobile Adjustments for Duel */
+        @media (max-width: 768px) {
+            .duel-section {
+                height: 150vh;
+            }
+
+            .duel-big-row {
+                font-size: 20vw;
+            }
+
+            .duel-side-img {
+                height: 50vh;
+                bottom: 0;
+                opacity: 0.8;
+            }
+
+            .scribble-kal {
+                left: 10%;
+                top: -30%;
+            }
+
+            .scribble-lex {
+                right: 10%;
+                bottom: -30%;
+            }
+        }
