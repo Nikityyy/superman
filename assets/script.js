@@ -1,275 +1,458 @@
-// CONFIGURATION
+// --- CONFIGURATION ---
 const CONFIG = {
-    particleCount: 150,
-    brushSize: 200,
-    smoothing: 0.12,
-    idleTimeout: 400,
+    canvas: {
+        particleCount: 150,
+        brushSize: 200,
+        smoothing: 0.12,
+        idleTimeout: 400
+    },
     images: {
         clark: 'images/clark-kent.avif',
         superman: 'images/kal-el.avif',
         logo: 'images/superman-logo.avif'
+    },
+    colors: {
+        sky: 0x2b6fb5,
+        cloud: 0xdcebf7,
+        shadow: 0x183655,
+        sun: 0xffe600,
+        glare: 0xff3838,
+        archiveNode: 0xffffff,
+        archiveLine: 0xdcebf7
+    },
+    archive: {
+        count: 60,
+        countMobile: 30,
+        connectionDist: 150,
+        speed: 0.35,
+        diamondChance: 0.6
     }
 };
 
-// --- 1. FORCE SCROLL TO TOP ON REFRESH ---
-if ('scrollRestoration' in history) {
-    history.scrollRestoration = 'manual';
+// --- DOM CACHE ---
+const DOM = {
+    loader: {
+        el: document.getElementById('appLoader'),
+        bar: document.getElementById('progressBar')
+    },
+    canvas: {
+        main: document.getElementById('mainCanvas'),
+        wrapper: document.getElementById('canvasContainer'), 
+        logo: document.getElementById('heroLogo'),
+        scrollTrack: document.querySelector('.hero-scroll-wrapper')
+    },
+    transition: {
+        section: document.querySelector('.transition-section'),
+        logo: document.getElementById('parallaxLogo')
+    },
+    timeline: {
+        section: document.querySelector('.timeline-section'),
+        sticky: document.getElementById('vantaCanvas'),
+        track: document.getElementById('horizontalTrack'),
+        images: document.querySelectorAll('.parallax-img')
+    },
+    rivalry: {
+        section: document.querySelector('.rivalry-section'),
+        imgKal: document.querySelector('.rivalry-img--left'),
+        imgLex: document.querySelector('.rivalry-img--right'),
+        rows: document.querySelectorAll('.rivalry-text-row'),
+        scribbles: document.querySelectorAll('.rivalry-scribble')
+    },
+    archive: {
+        bg: document.getElementById('phantomZone'),
+        cards: document.querySelectorAll('.archive-entry'),
+        header: document.querySelector('.archive-header')
+    },
+    newspaper: {
+        section: document.querySelector('.newspaper-section'),
+        sheet: document.querySelector('.daily-planet-sheet')
+    }
+};
+
+// --- STATE MANAGEMENT ---
+const state = {
+    width: 0,
+    height: 0,
+    canvasRect: { left: 0, top: 0 },
+    mouse: { x: -5000, y: -5000, tx: -5000, ty: -5000, active: false },
+    scrollProgress: 0,
+    brushSize: 0,
+    assets: {},
+    particles: [],
+    idleTimer: null,
+    lenis: null,
+    vanta: null,
+    archiveRequestFrame: null
+};
+
+// --- OFFSCREEN CANVASES ---
+const ctxs = {
+    main: DOM.canvas.main.getContext('2d', { alpha: false }),
+    clark: document.createElement('canvas').getContext('2d', { alpha: false }),
+    super: document.createElement('canvas').getContext('2d', { alpha: false }),
+    mask: document.createElement('canvas').getContext('2d'),
+    brush: document.createElement('canvas').getContext('2d')
+};
+
+// --- INITIALIZATION FLOW ---
+
+function init() {
+    if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
+    window.scrollTo(0, 0);
+
+    startPreloading().then(() => {
+        setupApp();
+        setupObservers();
+        animate();
+    });
 }
-window.scrollTo(0, 0);
 
-const canvas = document.getElementById('mainCanvas');
-const ctx = canvas.getContext('2d', { alpha: false });
-const logo = document.getElementById('logo');
-const canvasWrapper = document.getElementById('canvas-wrapper');
-const scrollTrack = document.querySelector('.scroll-height');
-const contentSection = document.querySelector('.content-section');
-const parallaxLogo = document.getElementById('parallaxLogo');
-const progressBar = document.getElementById('progressBar');
-
-const horizSection = document.querySelector('.horiz-container');
-const horizTrack = document.getElementById('track');
-const parallaxImages = document.querySelectorAll('.parallax-img');
-
-// Duel Elements
-const duelSection = document.querySelector('.duel-section');
-const duelImgKal = document.querySelector('.img-kal');
-const duelImgLex = document.querySelector('.img-lex');
-const duelRows = document.querySelectorAll('.duel-big-row');
-const duelScribbles = document.querySelectorAll('.duel-scribble');
-
-const clarkBgCanvas = document.createElement('canvas');
-const clarkBgCtx = clarkBgCanvas.getContext('2d', { alpha: false });
-const superBgCanvas = document.createElement('canvas');
-const superBgCtx = superBgCanvas.getContext('2d', { alpha: false });
-const maskCanvas = document.createElement('canvas');
-const maskCtx = maskCanvas.getContext('2d');
-const brushCanvas = document.createElement('canvas');
-const brushCtx = brushCanvas.getContext('2d');
-
-let width, height;
-let canvasRect = { left: 0, top: 0 };
-const assets = {};
-
-const mouse = { x: -5000, y: -5000, tx: -5000, ty: -5000 };
-const particles = [];
-let isMouseActive = false;
-let idleTimer = null;
-let currentBrushSize = 0;
-let scrollProgress = 0;
-let lenis;
-
-// --- 2. IMPROVED PRELOADING LOGIC ---
 function startPreloading() {
-    // Lock body scroll during loading
     document.body.style.overflow = 'hidden';
 
-    const minDuration = 1000; // Minimum 1 second
-
-    // Collect URLs from CONFIG
-    const configUrls = Object.keys(CONFIG.images).map(key => ({
-        key: key,
-        url: CONFIG.images[key],
-        isConfig: true
-    }));
-
-    // Collect URLs from DOM <img> tags
-    const domImages = Array.from(document.querySelectorAll('img'));
-    const domUrls = domImages.map(img => ({
-        url: img.src,
-        isConfig: false
-    }));
-
-    // Merge and deduplicate based on URL string
-    const allAssets = [...configUrls, ...domUrls];
-    // Create a Set to track unique URLs to avoid loading the same image twice
-    const uniqueUrls = new Set();
-    const uniqueAssetsToLoad = allAssets.filter(asset => {
-        if (!asset.url || uniqueUrls.has(asset.url)) return false;
-        uniqueUrls.add(asset.url);
-        return true;
-    });
-
-    let imagesLoadedCount = 0;
-    const totalImages = uniqueAssetsToLoad.length;
-
-    // Create Promises for every image
-    const imagePromises = uniqueAssetsToLoad.map(asset => {
+    const imageKeys = Object.keys(CONFIG.images);
+    const assetPromises = imageKeys.map(key => {
         return new Promise((resolve) => {
             const img = new Image();
             img.crossOrigin = "anonymous";
-            img.src = asset.url;
-
-            img.onload = () => {
-                // If it's a config image, store it in the assets object for Canvas use
-                if (asset.isConfig) {
-                    assets[asset.key] = img;
-                }
-                imagesLoadedCount++;
-                updateProgress(imagesLoadedCount, totalImages);
-                resolve();
-            };
-
-            img.onerror = () => {
-                console.warn('Failed to load:', asset.url);
-                // Resolve anyway so the loader doesn't get stuck
-                imagesLoadedCount++;
-                updateProgress(imagesLoadedCount, totalImages);
-                resolve();
-            };
+            img.src = CONFIG.images[key];
+            img.onload = () => { state.assets[key] = img; resolve(); };
+            img.onerror = resolve;
         });
     });
 
-    const fontPromise = document.fonts.ready;
-    const timePromise = new Promise(resolve => setTimeout(resolve, minDuration));
+    const domImages = Array.from(document.querySelectorAll('img'));
+    const decodePromises = domImages.map(img => {
+        return img.decode().catch(() => new Promise(r => { img.onload = r; img.onerror = r; }));
+    });
 
-    // Wait for Images + Fonts + Time
-    Promise.all([
-        Promise.all(imagePromises),
-        fontPromise,
-        timePromise
-    ]).then(() => {
-        finishLoading();
+    const vantaPromise = new Promise(resolve => {
+        initVanta();
+        setTimeout(resolve, 500);
+    });
+
+    const allPromises = [...assetPromises, ...decodePromises, vantaPromise, document.fonts.ready];
+
+    let loaded = 0;
+    const total = allPromises.length;
+
+    allPromises.forEach(p => p.then(() => {
+        loaded++;
+        if (DOM.loader.bar) {
+            const pct = Math.round((loaded / total) * 100);
+            DOM.loader.bar.style.width = `${pct}%`;
+        }
+    }));
+
+    const minTimePromise = new Promise(r => setTimeout(r, 1500));
+
+    return Promise.all([Promise.all(allPromises), minTimePromise]).then(() => {
+        if (DOM.loader.bar) DOM.loader.bar.style.width = '100%';
+        document.body.classList.add('loaded');
+        document.body.style.overflow = '';
+        handleResize();
     });
 }
 
-function updateProgress(loaded, total) {
-    if (progressBar) {
-        const percent = Math.round((loaded / total) * 100);
-        progressBar.style.width = `${percent}%`;
-    }
-}
-
-function finishLoading() {
-    // Ensure bar is full visually
-    if (progressBar) progressBar.style.width = '100%';
-
-    setTimeout(() => {
-        // Force scroll to top again right before init
-        window.scrollTo(0, 0);
-
-        // Remove scroll lock
-        document.body.style.overflow = '';
-
-        // Hide Loader
-        document.body.classList.add('loaded');
-
-        // Start Logic
-        init();
-    }, 500); // Small buffer to let the progress bar animation finish
-}
-
-function init() {
-    lenis = new Lenis({
+function setupApp() {
+    state.lenis = new Lenis({
         duration: 1.2,
         easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
         direction: 'vertical',
-        smooth: true,
+        smooth: true
     });
-
-    // Ensure Lenis starts at top
-    lenis.scrollTo(0, { immediate: true });
-
-    function raf(time) {
-        lenis.raf(time);
-        requestAnimationFrame(raf);
-    }
-    requestAnimationFrame(raf);
 
     createBrushTip();
-    resize();
     prepareBackgrounds();
+    generatePhantomZone();
 
-    window.addEventListener('resize', resize);
-
-    VANTA.CLOUDS({
-        el: ".horiz-sticky",
-        mouseControls: true,
-        touchControls: true,
-        gyroControls: false,
-        minHeight: 200.00,
-        minWidth: 200.00,
-        skyColor: 0x2b6fb5,       // Classic Superman Blue
-        cloudColor: 0xdcebf7,     // White/Light Grey Clouds
-        cloudShadowColor: 0x183655, // Darker Blue shadows
-        sunColor: 0xffe600,       // Yellow Sun accent
-        sunGlareColor: 0xff3838,  // Reddish glare
-        sunlightColor: 0xffffff,
-        speed: 1.0                // Movement speed
-    });
-
-    lenis.on('scroll', (e) => {
-        handleScroll(e.scroll);
-        updateCanvasRect();
-        updateParallax(e.scroll);
-        updateHorizontalScroll();
-        updateDuelScroll();
-    });
-
+    window.addEventListener('resize', handleResize);
+    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('touchmove', e => handleMouseMove(e.touches[0]));
     document.addEventListener('mouseout', () => {
-        isMouseActive = false;
-        clearTimeout(idleTimer);
+        state.mouse.active = false;
+        clearTimeout(state.idleTimer);
     });
 
-    window.addEventListener('mousemove', (e) => {
-        onMouseMove(e.clientX, e.clientY);
-    });
-
-    window.addEventListener('touchmove', (e) => {
-        onMouseMove(e.touches[0].clientX, e.touches[0].clientY);
-    });
-
-    // Initial render call
-    handleScroll(0);
-    updateHorizontalScroll();
-    updateDuelScroll();
-    requestAnimationFrame(render);
+    handleResize();
 }
 
-function resize() {
-    width = window.innerWidth;
-    height = window.innerHeight;
-    canvas.width = width; canvas.height = height;
-    clarkBgCanvas.width = width; clarkBgCanvas.height = height;
-    superBgCanvas.width = width; superBgCanvas.height = height;
-    maskCanvas.width = width; maskCanvas.height = height;
-    updateCanvasRect();
-    if (assets.clark && assets.superman) prepareBackgrounds();
+// --- RENDERING & LOGIC ---
+
+function animate(time) {
+    state.lenis.raf(time);
+    updateScrollDrivenLogic();
+    updateCanvasPhysics();
+    renderCanvas();
+    requestAnimationFrame(animate);
 }
 
-function updateCanvasRect() {
-    const rect = canvas.getBoundingClientRect();
-    canvasRect.left = rect.left;
-    canvasRect.top = rect.top;
-    canvasRect.width = rect.width;
-    canvasRect.height = rect.height;
+function updateScrollDrivenLogic() {
+    const scrollTop = window.scrollY || document.documentElement.scrollTop;
+
+    // 1. Hero Wipe
+    if (DOM.canvas.scrollTrack) {
+        const max = DOM.canvas.scrollTrack.offsetHeight - window.innerHeight;
+        state.scrollProgress = Math.max(0, Math.min(1, scrollTop / max));
+        updateHeroVisuals(state.scrollProgress);
+    }
+
+    // 2. Parallax Logo
+    if (DOM.transition.logo) {
+        const rect = DOM.transition.section.getBoundingClientRect();
+        const offset = (window.innerHeight / 2) - (rect.top + rect.height / 2);
+        DOM.transition.logo.style.transform = `translate(-50%, calc(-50% + ${offset * -0.15}px))`;
+    }
+
+    // 3. Horizontal Timeline
+    if (DOM.timeline.section) {
+        updateTimelineScroll();
+    }
+
+    // 4. Rivalry Slide
+    if (DOM.rivalry.section) {
+        updateRivalryScroll();
+    }
+    
+    // NOTE: Newspaper tilt logic removed to keep it flat/fullscreen
+}
+
+function updateHeroVisuals(progress) {
+    const scale = 1 - (progress * 0.5);
+    const radius = progress * 30;
+    const borderW = progress < 0.01 ? 0 : progress * 15;
+
+    DOM.canvas.wrapper.style.transform = `scale(${scale})`;
+    DOM.canvas.main.style.borderRadius = `${radius}px`;
+    DOM.canvas.main.style.border = `${borderW.toFixed(1)}px solid #ffffff`;
+    DOM.canvas.main.style.boxShadow = `0px 20px 50px rgba(0,0,0, ${progress * 0.8})`;
+
+    const shouldReveal = progress > 0.5 || (state.scrollProgress <= 0.8 && state.brushSize > 10 && state.mouse.x < 300 && state.mouse.y < 150);
+
+    if (shouldReveal) DOM.canvas.logo.classList.add('is-revealed');
+    else if (!state.mouse.active) DOM.canvas.logo.classList.remove('is-revealed');
+}
+
+function updateTimelineScroll() {
+    const rect = DOM.timeline.section.getBoundingClientRect();
+    const vpW = state.width;
+    const vpH = state.height;
+
+    const dist = DOM.timeline.section.offsetHeight - vpH;
+    const maxTrans = DOM.timeline.track.scrollWidth - vpW;
+
+    let progress = -rect.top / dist;
+    progress = Math.max(0, Math.min(1, progress));
+
+    let x = 0;
+    if (rect.top > 0) {
+        x = (vpW * 0.3) * (1 - Math.max(0, Math.min(1, 1 - (rect.top / vpH))));
+    } else {
+        x = - (maxTrans * progress);
+    }
+
+    DOM.timeline.track.style.transform = `translateX(${x}px)`;
+    DOM.timeline.images.forEach(img => img.style.transform = `scale(1.1)`);
+}
+
+function updateRivalryScroll() {
+    const rect = DOM.rivalry.section.getBoundingClientRect();
+    const center = rect.top + (rect.height / 2);
+    const viewCenter = state.height / 2;
+
+    const norm = (center - viewCenter) / state.height;
+    const entrance = Math.max(0, Math.min(1, norm));
+    const offset = entrance * 100;
+
+    if (DOM.rivalry.imgKal) DOM.rivalry.imgKal.style.transform = `translateX(-${offset}%)`;
+    if (DOM.rivalry.imgLex) DOM.rivalry.imgLex.style.transform = `translateX(${offset}%)`;
+
+    const opacity = 1 - entrance;
+    const textY = entrance * 150;
+
+    DOM.rivalry.rows.forEach(row => {
+        row.style.opacity = opacity;
+        row.style.transform = `translateY(${textY}px)`;
+    });
+
+    DOM.rivalry.scribbles.forEach(sc => {
+        sc.style.opacity = Math.max(0, (opacity - 0.2) * 1.5);
+    });
+}
+
+function updateCanvasPhysics() {
+    const dx = state.mouse.tx - state.mouse.x;
+    const dy = state.mouse.ty - state.mouse.y;
+    state.mouse.x += dx * CONFIG.canvas.smoothing;
+    state.mouse.y += dy * CONFIG.canvas.smoothing;
+
+    const targetSize = state.mouse.active ? CONFIG.canvas.brushSize : 0;
+    state.brushSize += (targetSize - state.brushSize) * 0.1;
+
+    if (state.brushSize > 0.5) {
+        const moveDist = Math.hypot(dx, dy);
+        const steps = Math.ceil(moveDist / (state.brushSize * 0.25));
+
+        if (moveDist > 1) {
+            for (let i = 0; i < steps; i++) {
+                const t = i / steps;
+                spawnParticle(
+                    state.mouse.x - (dx * (1 - CONFIG.canvas.smoothing)) * (1 - t),
+                    state.mouse.y - (dy * (1 - CONFIG.canvas.smoothing)) * (1 - t)
+                );
+            }
+        } else {
+            spawnParticle(state.mouse.x, state.mouse.y);
+        }
+    }
+
+    if (state.particles.length > CONFIG.canvas.particleCount) {
+        state.particles.splice(0, state.particles.length - CONFIG.canvas.particleCount);
+    }
+}
+
+function spawnParticle(x, y) {
+    state.particles.push({
+        x: x,
+        y: y,
+        size: state.brushSize,
+        life: 1.0
+    });
+}
+
+function renderCanvas() {
+    const { main, mask, brush, clark, super: sup } = ctxs;
+    const w = state.width;
+    const h = state.height;
+
+    main.drawImage(ctxs.clark.canvas, 0, 0);
+
+    if (state.scrollProgress > 0.01) {
+        main.globalAlpha = state.scrollProgress;
+        main.drawImage(ctxs.super.canvas, 0, 0);
+        main.globalAlpha = 1.0;
+    }
+
+    if (state.particles.length > 0) {
+        mask.clearRect(0, 0, w, h);
+
+        for (let i = state.particles.length - 1; i >= 0; i--) {
+            const p = state.particles[i];
+            p.life *= 0.96;
+            p.size *= 0.98;
+
+            if (p.life < 0.01) {
+                state.particles.splice(i, 1);
+                continue;
+            }
+
+            mask.globalAlpha = p.life;
+            mask.drawImage(ctxs.brush.canvas, p.x - p.size, p.y - p.size, p.size * 2, p.size * 2);
+        }
+        mask.globalAlpha = 1.0;
+
+        mask.globalCompositeOperation = 'source-in';
+        mask.drawImage(ctxs.super.canvas, 0, 0);
+        mask.globalCompositeOperation = 'source-over';
+
+        main.drawImage(ctxs.mask.canvas, 0, 0);
+    }
+}
+
+function hexToRgb(hex) {
+    const r = (hex >> 16) & 255;
+    const g = (hex >> 8) & 255;
+    const b = hex & 255;
+    return `${r}, ${g}, ${b}`;
+}
+
+function handleResize() {
+    state.width = window.innerWidth;
+    state.height = window.innerHeight;
+
+    [DOM.canvas.main, ctxs.clark.canvas, ctxs.super.canvas, ctxs.mask.canvas].forEach(c => {
+        c.width = state.width;
+        c.height = state.height;
+    });
+
+    const rect = DOM.canvas.main.getBoundingClientRect();
+    state.canvasRect = {
+        left: rect.left,
+        top: rect.top,
+        width: rect.width,
+        height: rect.height
+    };
+
+    if (state.assets.clark && state.assets.superman) prepareBackgrounds();
+    if (state.vanta) state.vanta.resize();
+}
+
+function handleMouseMove(e) {
+    const scaleX = state.width / state.canvasRect.width;
+    const scaleY = state.height / state.canvasRect.height;
+
+    const x = (e.clientX - state.canvasRect.left) * scaleX;
+    const y = (e.clientY - state.canvasRect.top) * scaleY;
+
+    if (!state.mouse.active) {
+        state.mouse.x = x;
+        state.mouse.y = y;
+        state.brushSize = 0;
+    }
+
+    state.mouse.tx = x;
+    state.mouse.ty = y;
+    state.mouse.active = true;
+
+    clearTimeout(state.idleTimer);
+    state.idleTimer = setTimeout(() => { state.mouse.active = false; }, CONFIG.canvas.idleTimeout);
 }
 
 function prepareBackgrounds() {
-    if (assets.clark) {
-        drawImageProp(clarkBgCtx, assets.clark, 0, 0, width, height);
-        clarkBgCtx.globalCompositeOperation = 'saturation';
-        clarkBgCtx.fillStyle = 'black';
-        clarkBgCtx.fillRect(0, 0, width, height);
-        clarkBgCtx.globalCompositeOperation = 'multiply';
-        clarkBgCtx.fillStyle = '#444';
-        clarkBgCtx.fillRect(0, 0, width, height);
-        clarkBgCtx.globalCompositeOperation = 'source-over';
+    const w = state.width;
+    const h = state.height;
+    const { clark, super: sup } = ctxs;
+
+    if (state.assets.clark) {
+        drawImageProp(clark, state.assets.clark, 0, 0, w, h);
+        clark.globalCompositeOperation = 'saturation';
+        clark.fillStyle = 'black';
+        clark.fillRect(0, 0, w, h);
+        clark.globalCompositeOperation = 'multiply';
+        clark.fillStyle = '#444';
+        clark.fillRect(0, 0, w, h);
+        clark.globalCompositeOperation = 'source-over';
     } else {
-        clarkBgCtx.fillStyle = '#222';
-        clarkBgCtx.fillRect(0, 0, width, height);
+        clark.fillStyle = '#222';
+        clark.fillRect(0, 0, w, h);
     }
-    if (assets.superman) {
-        superBgCtx.clearRect(0, 0, width, height);
-        drawImageProp(superBgCtx, assets.superman, 0, 0, width, height);
-        superBgCtx.fillStyle = 'rgba(0,0,0,0.2)';
-        superBgCtx.fillRect(0, 0, width, height);
-    } else {
-        superBgCtx.fillStyle = '#0055aa';
-        superBgCtx.fillRect(0, 0, width, height);
+
+    if (state.assets.superman) {
+        sup.clearRect(0, 0, w, h);
+        drawImageProp(sup, state.assets.superman, 0, 0, w, h);
+        sup.fillStyle = 'rgba(0,0,0,0.2)';
+        sup.fillRect(0, 0, w, h);
     }
 }
 
+function createBrushTip() {
+    const s = CONFIG.canvas.brushSize * 2;
+    ctxs.brush.canvas.width = s;
+    ctxs.brush.canvas.height = s;
+
+    const grad = ctxs.brush.createRadialGradient(s / 2, s / 2, s * 0.1, s / 2, s / 2, s / 2);
+    grad.addColorStop(0, 'rgba(255, 255, 255, 1)');
+    grad.addColorStop(0.5, 'rgba(255, 255, 255, 0.4)');
+    grad.addColorStop(1, 'rgba(255, 255, 255, 0)');
+
+    ctxs.brush.fillStyle = grad;
+    ctxs.brush.beginPath();
+    ctxs.brush.arc(s / 2, s / 2, s / 2, 0, Math.PI * 2);
+    ctxs.brush.fill();
+}
+
 function drawImageProp(ctx, img, x, y, w, h, offsetX = 0.5, offsetY = 0.5) {
+    if (!img) return;
     const iw = img.width, ih = img.height;
     const r = Math.min(w / iw, h / ih);
     let nw = iw * r, nh = ih * r;
@@ -284,179 +467,167 @@ function drawImageProp(ctx, img, x, y, w, h, offsetX = 0.5, offsetY = 0.5) {
     ctx.drawImage(img, cx, cy, cw, ch, x, y, w, h);
 }
 
-function createBrushTip() {
-    const s = CONFIG.brushSize * 2;
-    brushCanvas.width = s; brushCanvas.height = s;
-    const grad = brushCtx.createRadialGradient(s / 2, s / 2, s * 0.1, s / 2, s / 2, s / 2);
-    grad.addColorStop(0, 'rgba(255, 255, 255, 1)');
-    grad.addColorStop(0.5, 'rgba(255, 255, 255, 0.4)');
-    grad.addColorStop(1, 'rgba(255, 255, 255, 0)');
-    brushCtx.fillStyle = grad;
-    brushCtx.beginPath();
-    brushCtx.arc(s / 2, s / 2, s / 2, 0, Math.PI * 2);
-    brushCtx.fill();
-}
-
-function onMouseMove(clientX, clientY) {
-    const scaleX = canvas.width / canvasRect.width;
-    const scaleY = canvas.height / canvasRect.height;
-    const mX = (clientX - canvasRect.left) * scaleX;
-    const mY = (clientY - canvasRect.top) * scaleY;
-    if (!isMouseActive) {
-        mouse.x = mX; mouse.y = mY;
-        currentBrushSize = 0;
+function initVanta() {
+    try {
+        if (!DOM.timeline.sticky) return;
+        state.vanta = VANTA.CLOUDS({
+            el: DOM.timeline.sticky,
+            mouseControls: true,
+            touchControls: true,
+            gyroControls: false,
+            minHeight: 200.00,
+            minWidth: 200.00,
+            skyColor: CONFIG.colors.sky,
+            cloudColor: CONFIG.colors.cloud,
+            cloudShadowColor: CONFIG.colors.shadow,
+            sunColor: CONFIG.colors.sun,
+            sunGlareColor: CONFIG.colors.glare,
+            sunlightColor: 0xffffff,
+            speed: 1.0
+        });
+    } catch (e) {
+        console.warn("Vanta failed to init", e);
     }
-    mouse.tx = mX; mouse.ty = mY;
-    isMouseActive = true;
-    clearTimeout(idleTimer);
-    idleTimer = setTimeout(() => { isMouseActive = false; }, CONFIG.idleTimeout);
 }
 
-function handleScroll(scrollTop) {
-    const maxScroll = scrollTrack.offsetHeight - window.innerHeight;
-    const rawProgress = scrollTop / maxScroll;
-    scrollProgress = Math.max(0, Math.min(1, rawProgress));
-    updateLayoutEffects(scrollProgress);
-}
+function setupObservers() {
+    const opts = { threshold: 0.1, rootMargin: "0px 0px -50px 0px" };
 
-function updateParallax(scrollTop) {
-    if (!parallaxLogo) return;
-    const rect = contentSection.getBoundingClientRect();
-    const speed = -0.15;
-    const centerOffset = (window.innerHeight / 2) - (rect.top + rect.height / 2);
-    parallaxLogo.style.transform = `translate(-50%, calc(-50% + ${centerOffset * speed}px))`;
-}
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach((entry, i) => {
+            if (entry.isIntersecting) {
+                setTimeout(() => {
+                    entry.target.classList.add('active');
+                }, i * 100);
+                observer.unobserve(entry.target);
+            }
+        });
+    }, opts);
 
-function updateHorizontalScroll() {
-    if (!horizSection || !horizTrack) return;
+    DOM.archive.cards.forEach(card => {
+        card.classList.add('reveal-up');
+        observer.observe(card);
+    });
 
-    const rect = horizSection.getBoundingClientRect();
-    const viewportH = window.innerHeight;
-    const viewportW = window.innerWidth;
-    const scrollDist = horizSection.offsetHeight - viewportH;
-    const maxTranslate = horizTrack.scrollWidth - viewportW;
-
-    let rawProgress = -rect.top / scrollDist;
-    const p = Math.max(0, Math.min(1, rawProgress));
-
-    let x = 0;
-    if (rect.top > 0) {
-        const entranceFactor = 1 - (rect.top / viewportH);
-        const safeEntrance = Math.max(0, Math.min(1, entranceFactor));
-        x = (viewportW * 0.3) * (1 - safeEntrance);
-    } else {
-        x = - (maxTranslate * p);
-    }
-
-    horizTrack.style.transform = `translateX(${x}px)`;
-
-    if (parallaxImages.length) {
-        parallaxImages.forEach(img => {
-            // Simple subtle zoom effect
-            img.style.transform = `scale(1.1)`;
+    if (DOM.archive.header) {
+        Array.from(DOM.archive.header.children).forEach(child => {
+            child.classList.add('reveal-up');
+            observer.observe(child);
         });
     }
 }
 
-function updateDuelScroll() {
-    if (!duelSection) return;
+function generatePhantomZone() {
+    const container = DOM.archive.bg;
+    if (!container) return;
 
-    const rect = duelSection.getBoundingClientRect();
-    const viewH = window.innerHeight;
-    const sectionCenter = rect.top + (rect.height / 2);
-    const viewCenter = viewH / 2;
-    const dist = sectionCenter - viewCenter;
-    let norm = dist / viewH;
-    let entranceProgress = Math.max(0, Math.min(1, norm));
+    container.innerHTML = '';
+    if (state.archiveRequestFrame) cancelAnimationFrame(state.archiveRequestFrame);
 
-    const slideOffset = entranceProgress * 100;
+    const canvas = document.createElement('canvas');
+    canvas.className = 'archive-canvas';
+    container.appendChild(canvas);
 
-    if (duelImgKal) duelImgKal.style.transform = `translateX(-${slideOffset}%)`;
-    if (duelImgLex) duelImgLex.style.transform = `translateX(${slideOffset}%)`;
+    const ctx = canvas.getContext('2d');
+    let w, h;
+    let particles = [];
 
-    const safeOpacity = 1 - entranceProgress;
-    const textY = entranceProgress * 150;
+    const colNode = hexToRgb(CONFIG.colors.archiveNode);
+    const colLine = hexToRgb(CONFIG.colors.archiveLine);
 
-    duelRows.forEach(row => {
-        row.style.opacity = safeOpacity;
-        row.style.transform = `translateY(${textY}px)`;
-    });
+    const resize = () => {
+        w = container.offsetWidth;
+        h = container.offsetHeight;
+        canvas.width = w;
+        canvas.height = h;
+        initParticles();
+    };
 
-    duelScribbles.forEach(sc => {
-        sc.style.opacity = Math.max(0, (safeOpacity - 0.2) * 1.5);
-    });
-}
+    class DataNode {
+        constructor() {
+            this.x = Math.random() * w;
+            this.y = Math.random() * h;
+            this.vx = (Math.random() - 0.5) * CONFIG.archive.speed;
+            this.vy = (Math.random() - 0.5) * CONFIG.archive.speed;
+            this.size = Math.random() * 2 + 1;
+            this.isDiamond = Math.random() < CONFIG.archive.diamondChance;
+        }
 
-function updateLayoutEffects(p) {
-    const scale = 1 - (p * 0.5);
-    const radius = p * 30;
-    let borderW = p * 15;
-    if (p < 0.01) borderW = 0;
-    canvasWrapper.style.transform = `scale(${scale})`;
-    canvas.style.borderRadius = `${radius}px`;
-    canvas.style.border = `${borderW.toFixed(1)}px solid #ffffff`;
-    canvas.style.boxShadow = `0px 20px 50px rgba(0,0,0, ${p * 0.8})`;
-    if (p > 0.5) logo.classList.add('is-revealed');
-    else if (!isMouseActive) logo.classList.remove('is-revealed');
-}
+        update() {
+            this.x += this.vx;
+            this.y += this.vy;
 
-class Particle {
-    constructor(x, y, size) {
-        this.x = x; this.y = y; this.size = size; this.life = 1.0;
-    }
-    update() { this.life *= 0.96; this.size *= 0.98; }
-}
+            if (this.x < 0 || this.x > w) this.vx *= -1;
+            if (this.y < 0 || this.y > h) this.vy *= -1;
+        }
 
-function updatePhysics() {
-    const dx = mouse.tx - mouse.x;
-    const dy = mouse.ty - mouse.y;
-    mouse.x += dx * CONFIG.smoothing;
-    mouse.y += dy * CONFIG.smoothing;
-    if (scrollProgress <= 0.8 && currentBrushSize > 10) {
-        if (mouse.x < 300 && mouse.y < 150) logo.classList.add('is-revealed');
-        else logo.classList.remove('is-revealed');
-    }
-    const targetSize = isMouseActive ? CONFIG.brushSize : 0;
-    currentBrushSize += (targetSize - currentBrushSize) * 0.1;
-    if (currentBrushSize > 0.5) {
-        const dist = Math.hypot(dx, dy);
-        const steps = Math.ceil(dist / (currentBrushSize * 0.25));
-        if (dist > 1) {
-            for (let i = 0; i < steps; i++) {
-                const t = i / steps;
-                particles.push(new Particle(mouse.x - (dx * (1 - CONFIG.smoothing)) * (1 - t), mouse.y - (dy * (1 - CONFIG.smoothing)) * (1 - t), currentBrushSize));
+        draw() {
+            ctx.fillStyle = `rgba(${colNode}, ${this.size * 0.15})`;
+            ctx.beginPath();
+            if (this.isDiamond) {
+                ctx.moveTo(this.x, this.y - this.size);
+                ctx.lineTo(this.x + this.size, this.y);
+                ctx.lineTo(this.x, this.y + this.size);
+                ctx.lineTo(this.x - this.size, this.y);
+            } else {
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
             }
-        } else {
-            particles.push(new Particle(mouse.x, mouse.y, currentBrushSize));
+            ctx.fill();
         }
     }
-    if (particles.length > CONFIG.particleCount) particles.splice(0, particles.length - CONFIG.particleCount);
-}
 
-function render() {
-    updatePhysics();
-    ctx.drawImage(clarkBgCanvas, 0, 0);
-    if (scrollProgress > 0.01) {
-        ctx.globalAlpha = scrollProgress;
-        ctx.drawImage(superBgCanvas, 0, 0);
-        ctx.globalAlpha = 1.0;
+    function initParticles() {
+        particles = [];
+        const count = window.innerWidth < 768
+            ? CONFIG.archive.countMobile
+            : CONFIG.archive.count;
+
+        for (let i = 0; i < count; i++) {
+            particles.push(new DataNode());
+        }
     }
-    if (particles.length > 0) {
-        maskCtx.clearRect(0, 0, width, height);
-        for (let i = particles.length - 1; i >= 0; i--) {
-            const p = particles[i];
+
+    function animate() {
+        ctx.clearRect(0, 0, w, h);
+
+        particles.forEach(p => {
             p.update();
-            if (p.life < 0.01) { particles.splice(i, 1); continue; }
-            maskCtx.globalAlpha = p.life;
-            maskCtx.drawImage(brushCanvas, p.x - p.size, p.y - p.size, p.size * 2, p.size * 2);
+            p.draw();
+        });
+
+        const maxDist = CONFIG.archive.connectionDist;
+
+        for (let i = 0; i < particles.length; i++) {
+            for (let j = i + 1; j < particles.length; j++) {
+                const dx = particles[i].x - particles[j].x;
+                const dy = particles[i].y - particles[j].y;
+                const dist = Math.hypot(dx, dy);
+
+                if (dist < maxDist) {
+                    const opacity = 1 - (dist / maxDist);
+                    ctx.strokeStyle = `rgba(${colLine}, ${opacity * 0.15})`;
+                    ctx.lineWidth = 1;
+                    ctx.beginPath();
+                    ctx.moveTo(particles[i].x, particles[i].y);
+                    ctx.lineTo(particles[j].x, particles[j].y);
+                    ctx.stroke();
+                }
+            }
         }
-        maskCtx.globalAlpha = 1.0;
-        maskCtx.globalCompositeOperation = 'source-in';
-        maskCtx.drawImage(superBgCanvas, 0, 0);
-        maskCtx.globalCompositeOperation = 'source-over';
-        ctx.drawImage(maskCanvas, 0, 0);
+
+        const rect = container.getBoundingClientRect();
+        if (rect.bottom > 0 && rect.top < window.innerHeight) {
+            state.archiveRequestFrame = requestAnimationFrame(animate);
+        } else {
+            setTimeout(() => {
+                state.archiveRequestFrame = requestAnimationFrame(animate);
+            }, 500);
+        }
     }
-    requestAnimationFrame(render);
+
+    window.addEventListener('resize', resize);
+    resize();
+    animate();
 }
 
-startPreloading();
+init();

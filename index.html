@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Superman | The Man of Steel</title>
 
-    <!-- 1. Include Lenis for Smooth Scrolling -->
+    <!-- Dependencies -->
     <script src="https://unpkg.com/@studio-freight/lenis@1.0.33/dist/lenis.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/vanta@latest/dist/vanta.clouds.min.js"></script>
@@ -15,20 +15,20 @@
 
 <body>
 
-    <!-- LOADING SCREEN -->
-    <div id="loader">
-        <div class="loader-content">
-            <img src="images/superman-logo.avif" alt="Loading..." class="loader-logo-img">
-            <div class="loader-bar-container">
-                <div class="loader-bar" id="progressBar"></div>
+    <!-- 1. PRELOADER -->
+    <div id="appLoader" class="loader">
+        <div class="loader__content">
+            <img src="images/superman-logo.avif" alt="Loading..." class="loader__logo">
+            <div class="loader__progress-track">
+                <div class="loader__progress-bar" id="progressBar"></div>
             </div>
-            <div class="loader-text">Initializing Fortress</div>
+            <div class="loader__text">Initializing Fortress</div>
         </div>
     </div>
 
-    <!-- BACKGROUND MOVING TEXT -->
-    <div class="marquee-container" aria-hidden="true">
-        <div class="marquee-line left-to-right">
+    <!-- 2. BACKGROUND MARQUEE -->
+    <div class="background-marquee" aria-hidden="true">
+        <div class="marquee-line marquee-line--right">
             <div class="marquee-track">
                 <span class="marquee-text">MAN OF STEEL SUPERMAN MAN OF STEEL SUPERMAN</span>
                 <span class="marquee-text">MAN OF STEEL SUPERMAN MAN OF STEEL SUPERMAN</span>
@@ -38,7 +38,7 @@
                 <span class="marquee-text">MAN OF STEEL SUPERMAN MAN OF STEEL SUPERMAN</span>
             </div>
         </div>
-        <div class="marquee-line right-to-left">
+        <div class="marquee-line marquee-line--left">
             <div class="marquee-track">
                 <span class="marquee-text">KAL-EL KRYPTON HOPE KAL-EL KRYPTON HOPE</span>
                 <span class="marquee-text">KAL-EL KRYPTON HOPE KAL-EL KRYPTON HOPE</span>
@@ -48,7 +48,7 @@
                 <span class="marquee-text">KAL-EL KRYPTON HOPE KAL-EL KRYPTON HOPE</span>
             </div>
         </div>
-        <div class="marquee-line left-to-right">
+        <div class="marquee-line marquee-line--right">
             <div class="marquee-track">
                 <span class="marquee-text">MAN OF STEEL SUPERMAN MAN OF STEEL SUPERMAN</span>
                 <span class="marquee-text">MAN OF STEEL SUPERMAN MAN OF STEEL SUPERMAN</span>
@@ -58,7 +58,7 @@
                 <span class="marquee-text">MAN OF STEEL SUPERMAN MAN OF STEEL SUPERMAN</span>
             </div>
         </div>
-        <div class="marquee-line right-to-left">
+        <div class="marquee-line marquee-line--left">
             <div class="marquee-track">
                 <span class="marquee-text">KAL-EL KRYPTON HOPE KAL-EL KRYPTON HOPE</span>
                 <span class="marquee-text">KAL-EL KRYPTON HOPE KAL-EL KRYPTON HOPE</span>
@@ -70,24 +70,23 @@
         </div>
     </div>
 
-    <!-- MAIN SCROLLABLE AREA -->
-    <div class="scroll-height">
-        <div class="sticky-container">
-            <div id="canvas-wrapper">
-                <div id="logo">
-                    <span class="name-clark">CLARK KENT</span>
-                    <span class="name-super">SUPERMAN</span>
+    <!-- 3. HERO CANVAS -->
+    <div class="hero-scroll-wrapper">
+        <div class="sticky-viewport">
+            <div id="canvasContainer" class="canvas-container">
+                <div id="heroLogo" class="hero-logo">
+                    <span class="hero-logo__name hero-logo__name--clark">CLARK KENT</span>
+                    <span class="hero-logo__name hero-logo__name--super">SUPERMAN</span>
                 </div>
                 <canvas id="mainCanvas"></canvas>
             </div>
         </div>
     </div>
 
-    <!-- CONTENT SECTION -->
-    <section class="content-section">
+    <!-- 4. TRANSITION -->
+    <section class="transition-section">
         <img src="images/superman-logo.avif" alt="S Shield" class="parallax-logo" id="parallaxLogo">
-
-        <div class="text-block">
+        <div class="impact-text">
             <span>THE</span>
             <span>MAN</span>
             <span>OF</span>
@@ -95,98 +94,243 @@
         </div>
     </section>
 
-    <!-- HORIZONTAL SCROLL SECTION -->
-    <section class="horiz-container">
-        <div class="horiz-sticky">
-            <div class="horiz-track" id="track">
-
-                <!-- CARD 1 -->
-                <div class="h-item">
-                    <div class="h-meta">Smallville, 1993</div>
-                    <div class="h-img-box">
-                        <div class="h-img-inner">
+    <!-- 5. TIMELINE GALLERY -->
+    <section class="timeline-section">
+        <div class="timeline-sticky" id="vantaCanvas">
+            <div class="timeline-track" id="horizontalTrack">
+                <div class="timeline-card">
+                    <div class="timeline-card__meta">Smallville, 1993</div>
+                    <div class="timeline-card__visual">
+                        <div class="timeline-card__inner">
                             <img src="images/smallville.avif" alt="Kansas Fields" class="parallax-img">
                         </div>
                     </div>
                 </div>
-
-                <!-- CARD 2 (Quote) -->
-                <div class="h-item h-quote">
+                <div class="timeline-card timeline-card--quote">
                     <p>"I'm As <em>Human</em> As Anyone."</p>
-                    <div class="h-meta" style="margin-top: 20px; border:none;">— Kal-El</div>
+                    <div class="timeline-card__meta timeline-card__meta--clean">— Kal-El</div>
                 </div>
-
-                <!-- CARD 3 -->
-                <div class="h-item">
-                    <div class="h-meta">Metropolis, 2025</div>
-                    <div class="h-img-box">
-                        <div class="h-img-inner">
+                <div class="timeline-card">
+                    <div class="timeline-card__meta">Metropolis, 2025</div>
+                    <div class="timeline-card__visual">
+                        <div class="timeline-card__inner">
                             <img src="images/metropolis.avif" alt="Superman in Metropolis" class="parallax-img">
                         </div>
                     </div>
                 </div>
-
-                <!-- CARD 4 -->
-                <div class="h-item">
-                    <div class="h-meta">Fortress of Solitude, 2025</div>
-                    <div class="h-img-box">
-                        <div class="h-img-inner">
+                <div class="timeline-card">
+                    <div class="timeline-card__meta">Fortress of Solitude, 2025</div>
+                    <div class="timeline-card__visual">
+                        <div class="timeline-card__inner">
                             <img src="images/fortress.avif" alt="The Arctic" class="parallax-img">
                         </div>
                     </div>
                 </div>
-
-                <!-- CARD 5 (Quote) -->
-                <div class="h-item h-quote">
+                <div class="timeline-card timeline-card--quote">
                     <p>Maybe That's the Real <em>Punk Rock</em>.</p>
-                    <div class="h-meta" style="margin-top: 20px; border:none;">— Kal-El</div>
+                    <div class="timeline-card__meta timeline-card__meta--clean">— Kal-El</div>
                 </div>
-
-                <!-- CARD 6 -->
-                <div class="h-item" style="width: 700px">
-                    <div class="h-meta">Justice Gang, 2025</div>
-                    <div class="h-img-box">
-                        <div class="h-img-inner">
+                <div class="timeline-card timeline-card--wide">
+                    <div class="timeline-card__meta">Justice Gang, 2025</div>
+                    <div class="timeline-card__visual">
+                        <div class="timeline-card__inner">
                             <img src="images/justice-gang.avif" alt="The Justice Gang" class="parallax-img">
                         </div>
                     </div>
                 </div>
-
-                <!-- End Spacer -->
-                <div class="h-item" style="width: 20vw;"></div>
-
+                <div class="timeline-card timeline-card--spacer"></div>
             </div>
         </div>
     </section>
 
-    <!-- DUEL SECTION (Lando Style) -->
-    <section class="duel-section">
-        <div class="duel-sticky-wrapper">
-
-            <!-- Centered Massive Text -->
-            <div class="duel-center-text">
-                <div class="duel-big-row text-kal">
-                    <span class="duel-scribble scribble-kal">Savior</span>
+    <!-- 6. RIVALRY SECTION -->
+    <section class="rivalry-section">
+        <div class="rivalry-sticky">
+            <div class="rivalry-center-text">
+                <div class="rivalry-text-row rivalry-text-row--kal">
+                    <span class="rivalry-scribble rivalry-scribble--kal">Savior</span>
                     KAL-EL
                 </div>
-                <div class="duel-big-row text-lex">
-                    <span class="duel-scribble scribble-lex">Genius</span>
+                <div class="rivalry-text-row rivalry-text-row--lex">
+                    <span class="rivalry-scribble rivalry-scribble--lex">Genius</span>
                     LUTHOR
                 </div>
             </div>
+            <img src="images/kal-el-side.avif" alt="Superman Profile" class="rivalry-img rivalry-img--left">
+            <img src="images/lex-side.avif" alt="Lex Luthor Profile" class="rivalry-img rivalry-img--right">
+        </div>
+    </section>
 
-            <!-- Sliding Images (Scroll Driven) -->
-            <img src="images/kal-el-side.avif" alt="Superman Profile" class="duel-side-img img-kal">
-            <img src="images/lex-side.avif" alt="Lex Luthor Profile" class="duel-side-img img-lex">
+    <!-- 7. VICTORY ARCHIVE -->
+    <section class="archive-section">
+        <div class="archive-background" id="phantomZone"></div>
+        <div class="archive-header">
+            <h2 class="archive-title">CONQUERED<br><span class="archive-subtitle">GODS</span></h2>
+            <div class="archive-description">
+                From the ashes of Krypton to the fires of Apokolips,
+                Kal-El has stood as the shield against absolute power.
+                These are the titans that fell before the Man of Steel.
+            </div>
+        </div>
+        <div class="archive-grid">
+            <div class="archive-entry">
+                <div class="archive-entry__content">
+                    <div class="archive-entry__visual">
+                        <img src="images/enemy-brainiac.avif" alt="Brainiac" class="archive-entry__img">
+                        <div class="archive-entry__glow"></div>
+                    </div>
+                    <div class="archive-entry__meta">
+                        <div class="archive-entry__name">BRAINIAC</div>
+                        <div class="archive-entry__status">COLLECTOR OF WORLDS</div>
+                        <div class="archive-entry__year">1958</div>
+                    </div>
+                </div>
+            </div>
+            <div class="archive-entry">
+                <div class="archive-entry__content">
+                    <div class="archive-entry__visual">
+                        <img src="images/enemy-zod.avif" alt="General Zod" class="archive-entry__img">
+                        <div class="archive-entry__glow"></div>
+                    </div>
+                    <div class="archive-entry__meta">
+                        <div class="archive-entry__name">GENERAL ZOD</div>
+                        <div class="archive-entry__status">KRYPTONIAN</div>
+                        <div class="archive-entry__year">1961</div>
+                    </div>
+                </div>
+            </div>
+            <div class="archive-entry">
+                <div class="archive-entry__content">
+                    <div class="archive-entry__visual">
+                        <img src="images/enemy-parasite.avif" alt="Parasite" class="archive-entry__img">
+                        <div class="archive-entry__glow"></div>
+                    </div>
+                    <div class="archive-entry__meta">
+                        <div class="archive-entry__name">PARASITE</div>
+                        <div class="archive-entry__status">ENERGY VAMPIRE</div>
+                        <div class="archive-entry__year">1966</div>
+                    </div>
+                </div>
+            </div>
+            <div class="archive-entry">
+                <div class="archive-entry__content">
+                    <div class="archive-entry__visual">
+                        <img src="images/enemy-darkseid.avif" alt="Darkseid" class="archive-entry__img">
+                        <div class="archive-entry__glow"></div>
+                    </div>
+                    <div class="archive-entry__meta">
+                        <div class="archive-entry__name">DARKSEID</div>
+                        <div class="archive-entry__status">NEW GOD</div>
+                        <div class="archive-entry__year">1970</div>
+                    </div>
+                </div>
+            </div>
+            <div class="archive-entry">
+                <div class="archive-entry__content">
+                    <div class="archive-entry__visual">
+                        <img src="images/enemy-mongul.avif" alt="Mongul" class="archive-entry__img">
+                        <div class="archive-entry__glow"></div>
+                    </div>
+                    <div class="archive-entry__meta">
+                        <div class="archive-entry__name">MONGUL</div>
+                        <div class="archive-entry__status">WARLORD</div>
+                        <div class="archive-entry__year">1980</div>
+                    </div>
+                </div>
+            </div>
+            <div class="archive-entry">
+                <div class="archive-entry__content">
+                    <div class="archive-entry__visual">
+                        <img src="images/enemy-doomsday.avif" alt="Doomsday" class="archive-entry__img">
+                        <div class="archive-entry__glow"></div>
+                    </div>
+                    <div class="archive-entry__meta">
+                        <div class="archive-entry__name">DOOMSDAY</div>
+                        <div class="archive-entry__status">ANCIENT BIOWEAPON</div>
+                        <div class="archive-entry__year">1992</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
 
+    <!-- 8. DAILY PLANET (FULLSCREEN REPLICA) -->
+    <section class="newspaper-section">
+        <div class="paper-wrapper">
+            <div class="daily-planet-sheet">
+
+                <!-- A. MASTHEAD -->
+                <header class="paper-masthead">
+                    <div class="ear-box left">
+                        <span>"The Voice of<br>Metropolis"</span>
+                    </div>
+                    <h1 class="planet-logo">Daily <img src="images/daily-planet-logo.avif" class="planet-icon"
+                            alt="Planet"> Planet</h1>
+                    <div class="ear-box right">
+                        <span class="edition">EVENING EDITION</span>
+                        <p class="weather-text">Sunny skies prevail today with highs reaching near 80°F (27°C). A gentle
+                            breeze will keep things comfortable throughout the afternoon. Perfect weather for outdoor
+                            plans!</p>
+                    </div>
+                </header>
+
+                <!-- B. META BAR -->
+                <div class="paper-meta-bar">
+                    <span>VOL. LXII — NO. 60,011</span>
+                    <span class="meta-center">METROPOLIS, JULY 2025</span>
+                    <span>$8.50</span>
+                </div>
+
+                <!-- C. MAIN CONTENT GRID -->
+                <div class="paper-body">
+
+                    <!-- Left Column: Headline & Article -->
+                    <div class="col-text">
+                        <div class="main-headline">
+                            <span class="hl-top">SUPERMAN:</span>
+                            <span class="hl-mid">FRIEND OR FOE?</span>
+                        </div>
+
+                        <article class="front-page-story">
+                            <div class="author-box">
+                                <img src="images/lois-lane.avif" alt="Lois Lane" class="author-img">
+                                <div class="author-info">
+                                    <!-- "by" sits outside the EM tag, Name sits inside -->
+                                    <span class="byline">by <em>Lois Lane</em></span>
+                                    <span class="job-title">Investigative Reporter</span>
+                                </div>
+                            </div>
+                            <p class="story-text">
+                                As Superman's public presence grows, so does the unease on
+                                whether he is a protector or a potential danger.
+                                Studies gathered show public opinion is divided—a little over half of the Metropolis
+                                population hail him as a hero,
+                                while the remaining see his unchecked power as a threat. Personally, I believe our alien
+                                friend to be just that...a friend.
+                            </p>
+                        </article>
+                    </div>
+
+                    <!-- Right Column: Visuals -->
+                    <div class="col-visuals">
+                        <figure class="news-photo top-photo">
+                            <img src="images/superman-close-up.avif" alt="Superman Close Up">
+                        </figure>
+                        <figure class="news-photo bottom-photo">
+                            <img src="images/metropolis-crowd.avif" alt="Crowd looking up">
+                            <figcaption class="photo-credit">Photos by <b>Jimmy Olsen</b></figcaption>
+                        </figure>
+                    </div>
+
+                </div>
+            </div>
         </div>
     </section>
 
     <!-- FOOTER -->
-    <div
-        style="height: 50vh; display:flex; justify-content:center; align-items:center; background:#000; position:relative; z-index:40;">
-        <p style="color:#333; letter-spacing: 2px;">© KRYPTONIAN ARCHIVES</p>
-    </div>
+    <footer class="main-footer">
+        <p>© KRYPTONIAN ARCHIVES</p>
+    </footer>
 
     <script src="assets/script.js"></script>
 </body>
