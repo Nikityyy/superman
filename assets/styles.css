@@ -116,6 +116,72 @@ body:not(.loaded) .timeline-sticky {
     pointer-events: none !important;
 }
 
+.portfolio-link {
+    position: absolute;
+    top: 40px;
+    right: 40px;
+    z-index: 9000;
+    display: flex;
+    align-items: stretch;
+    text-decoration: none;
+    background: rgba(11, 11, 11, 0.8);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    transition: border-color 0.30s ease;
+    cursor: pointer;
+    overflow: hidden;
+}
+
+.portfolio-link:hover {
+    border-color: var(--color-accent-yellow);
+}
+
+.portfolio-link__content {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 10px 20px;
+    border-right: 1px solid rgba(255, 255, 255, 0.2);
+    transition: background-color 0.3s ease;
+}
+
+.portfolio-link__label {
+    font-family: 'CC Ultimatum', sans-serif;
+    font-size: 0.6rem;
+    color: var(--color-text-muted);
+    letter-spacing: 2px;
+    margin-bottom: 2px;
+    transition: color 0.3s ease;
+}
+
+.portfolio-link__name {
+    font-family: 'CC Ultimatum', sans-serif;
+    font-size: 1.1rem;
+    color: var(--color-text-white);
+    letter-spacing: 1px;
+    line-height: 1;
+    transition: color 0.3s ease;
+    overflow: hidden;
+
+    .char-box {
+        text-align: center;
+    }
+
+    .char-top,
+    .char-bottom {
+        width: 0.7em;
+    }
+}
+
+.portfolio-link:hover .portfolio-link__content {
+    background-color: rgba(255, 255, 255, 0.05);
+}
+
+.portfolio-link:hover .portfolio-link__label {
+    color: var(--color-text-white);
+}
+
 /* --- 1. LOADER --- */
 .loader {
     position: fixed;
@@ -1630,7 +1696,6 @@ canvas {
     display: block;
     transition: transform 0.5s cubic-bezier(0.65, 0, 0.35, 1);
     transition-delay: calc(var(--i) * 0.025s);
-    /* The Stagger Logic */
     backface-visibility: hidden;
     will-change: transform;
 }
@@ -1656,6 +1721,15 @@ canvas {
 /* Fix for Right Column Alignment */
 .col-right .footer-links a {
     justify-content: flex-end;
+}
+
+/* Hover Animations for Portfolio Link */
+.portfolio-link:hover .char-top {
+    transform: translateY(-100%);
+}
+
+.portfolio-link:hover .char-bottom {
+    transform: translateY(0);
 }
 
 /* --- BOTTOM BAR --- */
@@ -1781,6 +1855,13 @@ canvas {
         /* Cards take up most of screen on mobile */
         --card-width-wide: 85vw;
         --card-height: 450px;
+    }
+
+    .portfolio-link {
+        top: 20px;
+        right: 20px;
+        transform: scale(0.85);
+        transform-origin: top right;
     }
 
     /* --- 1. HERO --- */

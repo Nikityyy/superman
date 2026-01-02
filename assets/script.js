@@ -178,7 +178,7 @@ function setupApp() {
     createBrushTip();
     prepareBackgrounds();
     generatePhantomZone();
-    setupFooterLinks();
+    setupLinks();
 
     window.addEventListener('resize', handleResize);
     window.addEventListener('mousemove', handleMouseMove);
@@ -744,16 +744,22 @@ function generatePhantomZone() {
     animate();
 }
 
-function setupFooterLinks() {
-    const links = document.querySelectorAll('.footer-links a');
+function setupLinks() {
+    const elements = document.querySelectorAll('.footer-links a, .portfolio-link__name');
 
-    links.forEach(link => {
-        const text = link.textContent.trim();
-        link.innerHTML = ''; // Clear original text
-        link.removeAttribute('data-hover'); // Remove old CSS hook
+    elements.forEach(element => {
+        const text = element.textContent.trim();
+        const hoverText = element.dataset.hover || text;
+        element.innerHTML = '';
+        if (element.classList.contains('portfolio-link__name')) {
+            // Keep data-hover for portfolio, remove for footer links
+        } else {
+            element.removeAttribute('data-hover');
+        }
 
         // Split text into characters
         const chars = text.split('');
+        const hoverChars = hoverText.split('');
 
         chars.forEach((char, index) => {
             // Create container for the character pair
@@ -763,6 +769,7 @@ function setupFooterLinks() {
 
             // Handle spaces explicitly
             const displayChar = char === ' ' ? '&nbsp;' : char;
+            const hoverChar = hoverChars[index] === ' ' ? '&nbsp;' : (hoverChars[index] || displayChar);
 
             // Top letter (Initial)
             const topSpan = document.createElement('span');
@@ -772,11 +779,11 @@ function setupFooterLinks() {
             // Bottom letter (Hover state)
             const bottomSpan = document.createElement('span');
             bottomSpan.className = 'char-bottom';
-            bottomSpan.innerHTML = displayChar;
+            bottomSpan.innerHTML = hoverChar;
 
             container.appendChild(topSpan);
             container.appendChild(bottomSpan);
-            link.appendChild(container);
+            element.appendChild(container);
         });
     });
 }
