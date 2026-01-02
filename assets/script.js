@@ -112,6 +112,17 @@ function init() {
 function startPreloading() {
     document.body.style.overflow = 'hidden';
 
+    // Load external resources first
+    const fontPromise = loadGoogleFonts();
+    const scriptPromises = [
+        loadScript('https://unpkg.com/@studio-freight/lenis@1.0.33/dist/lenis.min.js')
+    ];
+    const externalPromises = [fontPromise, ...scriptPromises];
+
+    // Initialize marquee after fonts are loaded
+    fontPromise.then(() => initMarqueeSystem());
+
+    // Then load images and initialize vanta after scripts are loaded
     const imageKeys = Object.keys(CONFIG.images);
     const assetPromises = imageKeys.map(key => {
         return new Promise((resolve) => {
@@ -128,14 +139,12 @@ function startPreloading() {
         return img.decode().catch(() => new Promise(r => { img.onload = r; img.onerror = r; }));
     });
 
-    initMarqueeSystem();
-
-    const vantaPromise = new Promise(resolve => {
+    const vantaPromise = Promise.all(externalPromises).then(() => {
         initVanta();
-        setTimeout(resolve, 500);
+        return new Promise(resolve => setTimeout(resolve, 500));
     });
 
-    const allPromises = [...assetPromises, ...decodePromises, vantaPromise, document.fonts.ready];
+    const allPromises = [...externalPromises, ...assetPromises, ...decodePromises, vantaPromise, document.fonts.ready];
 
     let loaded = 0;
     const total = allPromises.length;
@@ -492,6 +501,27 @@ function drawImageProp(ctx, img, x, y, w, h, offsetX = 0.5, offsetY = 0.5) {
     if (cx < 0) cx = 0; if (cy < 0) cy = 0;
     if (cw > iw) cw = iw; if (ch > ih) ch = ih;
     ctx.drawImage(img, cx, cy, cw, ch, x, y, w, h);
+}
+
+function loadScript(src) {
+    return new Promise((resolve, reject) => {
+        const script = document.createElement('script');
+        script.src = src;
+        script.onload = resolve;
+        script.onerror = reject;
+        document.head.appendChild(script);
+    });
+}
+
+function loadGoogleFonts() {
+    return new Promise((resolve, reject) => {
+        const link = document.createElement('link');
+        link.rel = 'stylesheet';
+        link.href = 'https://fonts.googleapis.com/css2?family=Anton:wght@700&family=Oswald:wght@700&family=Playfair+Display:ital,wght@0,400;0,700;1,400;1,700&family=UnifrakturMaguntia&display=swap';
+        link.onload = resolve;
+        link.onerror = reject;
+        document.head.appendChild(link);
+    });
 }
 
 function initMarqueeSystem() {
