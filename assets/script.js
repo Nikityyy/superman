@@ -128,6 +128,8 @@ function startPreloading() {
         return img.decode().catch(() => new Promise(r => { img.onload = r; img.onerror = r; }));
     });
 
+    initMarqueeSystem();
+
     const vantaPromise = new Promise(resolve => {
         initVanta();
         setTimeout(resolve, 500);
@@ -237,25 +239,40 @@ function updateHeroVisuals(progress) {
 }
 
 function updateTimelineScroll() {
+    // Safety check
+    if (!DOM.timeline.section || !DOM.timeline.track) return;
+
     const rect = DOM.timeline.section.getBoundingClientRect();
     const vpW = state.width;
     const vpH = state.height;
 
+    // Calculate total scrollable distance (height of section minus 1 viewport)
     const dist = DOM.timeline.section.offsetHeight - vpH;
+
+    // Calculate how far the horizontal track needs to move
+    // We subtract vpW because we want the end of the track to hit the right side of screen
     const maxTrans = DOM.timeline.track.scrollWidth - vpW;
 
+    // 0 to 1 progress based on scroll position
     let progress = -rect.top / dist;
     progress = Math.max(0, Math.min(1, progress));
 
     let x = 0;
+
+    // Logic: If section hasn't hit top, keep it centered or static. 
+    // Once sticky kicks in (rect.top <= 0), move it.
     if (rect.top > 0) {
-        x = (vpW * 0.3) * (1 - Math.max(0, Math.min(1, 1 - (rect.top / vpH))));
+        // Optional: slight entry animation
+        x = 0;
     } else {
         x = - (maxTrans * progress);
     }
 
     DOM.timeline.track.style.transform = `translateX(${x}px)`;
-    DOM.timeline.images.forEach(img => img.style.transform = `scale(1.1)`);
+
+    // Disable parallax scale on mobile for performance
+    const scale = window.innerWidth < 768 ? 1.0 : 1.1;
+    DOM.timeline.images.forEach(img => img.style.transform = `scale(${scale})`);
 }
 
 function updateRivalryScroll() {
@@ -373,6 +390,7 @@ function handleResize() {
     state.width = window.innerWidth;
     state.height = window.innerHeight;
 
+    // Canvas resizing
     [DOM.canvas.main, ctxs.clark.canvas, ctxs.super.canvas, ctxs.mask.canvas].forEach(c => {
         c.width = state.width;
         c.height = state.height;
@@ -388,6 +406,12 @@ function handleResize() {
 
     if (state.assets.clark && state.assets.superman) prepareBackgrounds();
     if (state.vanta) state.vanta.resize();
+
+    // --- RESPONSIVE LOGIC ADDITION ---
+    // Recalculate horizontal track explicitly
+    if (DOM.timeline.track) {
+        DOM.timeline.track.style.width = 'max-content'; // Ensure it expands
+    }
 }
 
 function handleMouseMove(e) {
@@ -468,6 +492,48 @@ function drawImageProp(ctx, img, x, y, w, h, offsetX = 0.5, offsetY = 0.5) {
     if (cx < 0) cx = 0; if (cy < 0) cy = 0;
     if (cw > iw) cw = iw; if (ch > ih) ch = ih;
     ctx.drawImage(img, cx, cy, cw, ch, x, y, w, h);
+}
+
+function initMarqueeSystem() {
+    const container = document.getElementById('marqueeSystem');
+    const settings = {
+        lineCount: 8,
+        textPrimary: "MAN OF STEEL SUPERMAN MAN OF STEEL SUPERMAN",
+        textSecondary: "KAL-EL KRYPTON HOPE KAL-EL KRYPTON HOPE"
+    };
+
+    container.innerHTML = '';
+
+    for (let i = 0; i < settings.lineCount; i++) {
+        const isEven = i % 2 === 0;
+        const direction = isEven ? 'right' : 'left';
+        const textContent = isEven ? settings.textPrimary : settings.textSecondary;
+
+        const line = document.createElement('div');
+        line.classList.add('marquee-line', `marquee-line--${direction}`);
+
+        const createTrack = () => {
+            const track = document.createElement('div');
+            track.classList.add('marquee-track');
+
+            const span1 = document.createElement('span');
+            span1.classList.add('marquee-text');
+            span1.innerText = textContent;
+
+            const span2 = document.createElement('span');
+            span2.classList.add('marquee-text');
+            span2.innerText = textContent;
+
+            track.appendChild(span1);
+            track.appendChild(span2);
+            return track;
+        };
+
+        line.appendChild(createTrack());
+        line.appendChild(createTrack());
+
+        container.appendChild(line);
+    }
 }
 
 function initVanta() {

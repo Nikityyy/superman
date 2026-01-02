@@ -1,5 +1,3 @@
-@import url('https://fonts.googleapis.com/css2?family=UnifrakturMaguntia&family=Anton&family=Oswald:wght@700&family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap');
-
 /* --- FONTS --- */
 @font-face {
     font-family: 'CC Ultimatum';
@@ -84,7 +82,7 @@ body:not(.loaded) .timeline-sticky {
     top: 0 !important;
     left: 0 !important;
     width: 100% !important;
-    height: 100vh !important;
+    height: 100dvh !important;
     z-index: 9000 !important;
     visibility: visible !important;
     opacity: 1 !important;
@@ -97,7 +95,7 @@ body:not(.loaded) .timeline-sticky {
     top: 0;
     left: 0;
     width: 100%;
-    height: 100vh;
+    height: 100dvh;
     background-color: #000;
     z-index: var(--z-loader);
     display: flex;
@@ -190,7 +188,7 @@ body.loaded .loader__content {
     top: 0;
     left: 0;
     width: 100%;
-    height: 100vh;
+    height: 100dvh;
     z-index: var(--z-marquee);
     display: flex;
     flex-direction: column;
@@ -204,15 +202,15 @@ body.loaded .loader__content {
 .marquee-line {
     display: flex;
     width: 100%;
-    overflow: hidden;
-    transform: rotate(-2deg) scale(1.1);
-    padding-bottom: 5vw;
+    transform: translateZ(0) rotate(-2deg) scale(1.1);
+    padding-bottom: 2.5dvh;
 }
 
 .marquee-track {
     display: flex;
     white-space: nowrap;
     flex-shrink: 0;
+    will-change: transform;
 }
 
 .marquee-text {
@@ -419,10 +417,6 @@ canvas {
 
 .timeline-card--wide {
     width: var(--card-width-wide);
-}
-
-.timeline-card--spacer {
-    width: 20vw;
 }
 
 .timeline-card--quote {
@@ -875,7 +869,7 @@ canvas {
 
 .planet-logo {
     font-family: 'UnifrakturMaguntia', cursive;
-    font-size: 7rem;
+    font-size: clamp(2rem, 5vw, 7rem);
     /* Larger logo */
     margin: 0;
     line-height: 1;
@@ -1022,12 +1016,12 @@ canvas {
     line-height: 0.82;
     margin-bottom: 30px;
     font-family: 'Anton', sans-serif;
+    font-weight: 700;
     color: #050505;
 }
 
 .hl-top {
     font-size: 7vw;
-    font-family: 'Oswald', sans-serif;
     /* Condensed slab look */
     margin-bottom: 5px;
 }
@@ -1501,10 +1495,7 @@ canvas {
     width: 100%;
     height: auto;
     z-index: 5;
-    /* Middle layer */
-
-    /* THE OVERLAP MAGIC */
-    margin-top: -90px;
+    margin-top: -100px;
 
     pointer-events: none;
     display: flex;
@@ -1736,5 +1727,230 @@ canvas {
         align-items: center;
         text-align: center;
         gap: 20px;
+    }
+}
+
+@media (max-width: 1024px) {
+    :root {
+        --card-width: 60vw;
+        --card-width-wide: 80vw;
+    }
+
+    /* Relax the marquee for tablets */
+    .marquee-text {
+        font-size: 10vw;
+    }
+
+    .archive-section {
+        margin-bottom: -20px;
+    }
+}
+
+@media (max-width: 768px) {
+    :root {
+        --card-width: 85vw;
+        /* Cards take up most of screen on mobile */
+        --card-width-wide: 85vw;
+        --card-height: 450px;
+    }
+
+    /* --- 1. HERO --- */
+    .hero-logo {
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 100%;
+        text-align: center;
+        padding: 0 20px;
+    }
+
+    .hero-logo__name {
+        font-size: 12vw;
+        /* Scale text to viewport width */
+    }
+
+    /* --- 2. TRANSITION --- */
+    .impact-text span {
+        font-size: 20vw;
+        /* Make massive */
+        line-height: 0.9;
+    }
+
+    .parallax-logo {
+        width: 80vw;
+    }
+
+    /* --- 3. TIMELINE --- */
+    /* Reduce scroll distance on mobile so it doesn't feel infinite */
+    .timeline-section {
+        height: 350vh;
+    }
+
+    .timeline-card {
+        margin-right: 5vw;
+    }
+
+    /* Remove the vertical stagger on mobile for cleaner scroll */
+    .timeline-card:nth-child(even):not(.timeline-card--quote) {
+        transform: translateY(0);
+    }
+
+    .timeline-card--quote {
+        width: 80vw;
+    }
+
+    .timeline-card--quote p {
+        font-size: 8vw;
+    }
+
+    /* --- 4. RIVALRY --- */
+    .rivalry-text-row {
+        font-size: 20vw;
+        /* Stacked text needs to be smaller or wrap */
+    }
+
+    .rivalry-center-text {
+        z-index: 25;
+        /* Bring text above images on mobile */
+    }
+
+    /* Move images to background/opacity on mobile to keep text readable */
+    .rivalry-img {
+        height: 50vh;
+        max-width: 80vw;
+    }
+
+    .rivalry-img--left {
+        top: 0;
+        /* Move up */
+        left: -20%;
+    }
+
+    .rivalry-img--right {
+        right: -20%;
+    }
+
+    /* --- 5. NEWSPAPER (CRITICAL FIX) --- */
+    .newspaper-section {
+        padding-top: 50px;
+        margin-top: 0;
+    }
+
+    /* Break the Masthead Grid */
+    .paper-masthead {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+    }
+
+    .ear-box {
+        width: 100%;
+        padding: 15px;
+        font-size: 0.9rem;
+    }
+
+    .ear-box.right {
+        order: -1;
+        /* Move date/weather to top */
+        border-bottom: 2px solid #000;
+    }
+
+    .planet-logo {
+        font-size: 13vw;
+        /* Massive logo for mobile */
+    }
+
+    .planet-icon {
+        width: 10vw;
+    }
+
+    /* Fix Meta Bar */
+    .paper-meta-bar {
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+        text-align: center;
+    }
+
+    .paper-meta-bar>span {
+        text-align: center;
+    }
+
+    /* Fix Body Columns */
+    .paper-body {
+        flex-direction: column;
+    }
+
+    .col-visuals {
+        max-width: 100%;
+        order: -1;
+        /* Images first on mobile */
+        margin-bottom: 30px;
+    }
+
+    .main-headline {
+        margin-top: 20px;
+    }
+
+    .story-text {
+        margin-left: 0;
+        /* Remove left margin indentation */
+        transform: translateY(0);
+        font-size: 1.1rem;
+    }
+
+    /* --- 6. ARCHIVE --- */
+    .archive-header {
+        margin-bottom: 50px;
+    }
+
+    .archive-grid {
+        gap: 40px;
+    }
+
+    .archive-entry__year {
+        font-size: 4rem;
+        /* Make year easier to tap/read */
+    }
+
+    .gang-card {
+        /* Force vertical stack explicitly */
+        transform: none !important;
+        margin-left: 0 !important;
+        margin-bottom: 20px !important;
+        width: 90% !important;
+        height: auto;
+        aspect-ratio: 3/4;
+    }
+
+    .gang-deck {
+        display: flex;
+        flex-direction: column;
+        gap: 30px;
+    }
+
+    .gang-info {
+        /* Always show info on mobile, don't wait for hover */
+        transform: translateY(0);
+        background: linear-gradient(to top, rgba(0, 0, 0, 0.9), rgba(0, 0, 0, 0.6));
+        padding-top: 20px;
+    }
+
+    .gang-card:hover {
+        transform: scale(1.02) !important;
+        margin-bottom: 20px !important;
+    }
+
+    /* --- 8. FOOTER --- */
+    .footer-slogan {
+        font-size: 12vw;
+    }
+
+    .cape-container {
+        margin-top: -20px;
+    }
+
+    .footer-links a {
+        font-size: 2rem;
     }
 }
