@@ -1167,12 +1167,17 @@ canvas {
     position: relative;
     z-index: 45;
     background-color: var(--color-bg-dark);
-    padding: 100px 0 150px 0;
+    padding: 50px 0 150px 0;
     overflow: hidden;
     display: flex;
     flex-direction: column;
     align-items: center;
     min-height: 100vh;
+    margin-top: -80px;
+    margin-bottom: 0;
+    padding-bottom: 200px;
+    border-radius: 50% 50% 0 0 / 3vw 3vw 0 0;
+    box-shadow: 0 -10px 50px rgba(0, 0, 0, 0.5);
 }
 
 /* Header Styling */
@@ -1416,17 +1421,320 @@ canvas {
 }
 
 /* --- FOOTER --- */
-.main-footer {
-    height: 50vh;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    background: #000;
+
+.fortress-footer {
     position: relative;
-    z-index: var(--z-footer);
+    background-color: #080808;
+    color: #fff;
+    /* Reduced padding since cape is no longer flying out the top */
+    padding: 100px 4vw 40px 4vw;
+    overflow: visible;
+    z-index: 50;
+    border-top: 1px solid #222;
 }
 
-.main-footer p {
-    color: #333;
-    letter-spacing: 2px;
+/* 1. Background Texture */
+.fortress-bg {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0.15;
+    background-image:
+        repeating-radial-gradient(circle at 50% 0%, transparent 0, #080808 3px, #222 4px, transparent 5px),
+        linear-gradient(to bottom, #000 0%, transparent 20%);
+    pointer-events: none;
+    z-index: 0;
+}
+
+/* 2. Main Layout Grid */
+.footer-content-wrapper {
+    position: relative;
+    z-index: 20;
+    display: grid;
+    /* Columns: Nav | Center Stack | Nav */
+    grid-template-columns: 1fr 1.2fr 1fr;
+    gap: 20px;
+    align-items: center;
+    max-width: 1800px;
+    margin: 0 auto 80px auto;
+}
+
+/* --- CENTER COLUMN STACKING LOGIC --- */
+.col-center {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    isolation: isolate;
+    gap: 10vh;
+}
+
+/* Layer 1: The Slogan */
+.footer-slogan {
+    font-family: 'CC Ultimatum', sans-serif;
+    font-size: clamp(5rem, 8vw, 10rem);
+    line-height: 0.85;
+    text-transform: uppercase;
+    color: #fff;
+    text-align: center;
+    margin: 0;
+    position: relative;
+    z-index: 1;
+    /* Lowest layer */
+}
+
+.footer-slogan span {
+    display: block;
+}
+
+.slogan-highlight {
+    color: var(--color-accent-red);
+    text-shadow: 0 0 30px rgba(226, 0, 26, 0.4);
+}
+
+/* Layer 2: The Cape (Smaller & Overlapping) */
+.cape-container {
+    position: relative;
+    width: 100%;
+    height: auto;
+    z-index: 5;
+    /* Middle layer */
+
+    /* THE OVERLAP MAGIC */
+    margin-top: -90px;
+
+    pointer-events: none;
+    display: flex;
+    justify-content: center;
+}
+
+.cape-visual {
+    width: 100%;
+    height: auto;
+    object-fit: contain;
+    filter: drop-shadow(0 20px 40px rgba(0, 0, 0, 0.8));
+    animation: capeFloat 5s ease-in-out infinite;
+}
+
+@keyframes capeFloat {
+
+    0%,
+    100% {
+        transform: translateY(0) scale(1);
+    }
+
+    50% {
+        transform: translateY(-10px) scale(1.02);
+    }
+}
+
+/* --- SIDE COLUMNS --- */
+.col-side {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.col-left {
+    align-items: flex-start;
+    text-align: left;
+}
+
+.col-right {
+    align-items: flex-end;
+    text-align: right;
+}
+
+.col-label {
+    font-family: 'CC Ultimatum', sans-serif;
+    font-size: 0.8rem;
+    color: #444;
+    margin-bottom: 20px;
+    letter-spacing: 3px;
+    font-weight: bold;
+    text-transform: uppercase;
+}
+
+/* Links Styling */
+.footer-links {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.footer-links li {
+    margin-bottom: 5px;
+    /* Slight adjustment */
+    overflow: hidden;
+}
+
+/* Updated Anchor Styling */
+.footer-links a {
+    font-family: 'Oswald', sans-serif;
+    font-size: clamp(1.5rem, 2vw, 2.5rem);
+    color: #fff;
+    text-decoration: none;
+    text-transform: uppercase;
+    line-height: 1.0;
+    /* Tighter line height for the flip */
+    display: inline-flex;
+    /* Use flex to hold char boxes */
+    position: relative;
+    overflow: hidden;
+}
+
+/* Remove the old effect */
+.footer-links a::after {
+    content: none;
+}
+
+.footer-links a:hover {
+    transform: none;
+    /* Remove old transform */
+    color: #fff;
+    /* Keep base color */
+}
+
+/* New Staggered Character Styles */
+.char-box {
+    position: relative;
+    display: inline-block;
+    font-weight: 700;
+}
+
+.char-top,
+.char-bottom {
+    display: block;
+    transition: transform 0.5s cubic-bezier(0.65, 0, 0.35, 1);
+    transition-delay: calc(var(--i) * 0.025s);
+    /* The Stagger Logic */
+    backface-visibility: hidden;
+    will-change: transform;
+}
+
+.char-bottom {
+    position: absolute;
+    top: 0;
+    left: 0;
+    transform: translateY(100%);
+    color: var(--color-accent-yellow);
+    /* Hover color */
+}
+
+/* Hover Actions */
+.footer-links a:hover .char-top {
+    transform: translateY(-100%);
+}
+
+.footer-links a:hover .char-bottom {
+    transform: translateY(0);
+}
+
+/* Fix for Right Column Alignment */
+.col-right .footer-links a {
+    justify-content: flex-end;
+}
+
+/* --- BOTTOM BAR --- */
+.footer-bottom {
+    border-top: 1px solid #222;
+    padding-top: 30px;
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+}
+
+.sponsor-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 20px;
+    opacity: 0.5;
+    transition: opacity 0.3s;
+}
+
+.sponsor-bar:hover {
+    opacity: 1;
+}
+
+.sponsor-bar img {
+    height: 48px;
+}
+
+.sponsor-logo {
+    font-size: clamp(1rem, 1.5vw, 1.5rem);
+    text-transform: uppercase;
+}
+
+.legal-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    font-size: 0.75rem;
+    color: #555;
+    font-family: monospace;
+}
+
+.ai-disclosure {
+    max-width: 450px;
+    margin: 0;
+    line-height: 1.4;
+}
+
+/* --- RESPONSIVE ADJUSTMENTS --- */
+@media (max-width: 1024px) {
+    .footer-content-wrapper {
+        grid-template-columns: 1fr;
+        /* Stack vertically */
+        text-align: center;
+        gap: 60px;
+    }
+
+    .col-center {
+        order: 1;
+    }
+
+    .col-left {
+        order: 2;
+        align-items: center;
+        text-align: center;
+    }
+
+    .col-right {
+        order: 3;
+        align-items: center;
+        text-align: center;
+    }
+
+    .col-right .footer-links a::after {
+        left: 0;
+        right: auto;
+    }
+
+    .footer-slogan {
+        font-size: 15vw;
+    }
+
+    .cape-container {
+        max-width: 300px;
+        /* Even smaller on mobile */
+        margin-top: -30px;
+        margin-bottom: -40px;
+    }
+
+    .sponsor-bar {
+        justify-content: center;
+        gap: 30px;
+    }
+
+    .legal-bar {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        gap: 20px;
+    }
 }

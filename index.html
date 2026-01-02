@@ -71,7 +71,7 @@
     </div>
 
     <!-- 3. HERO CANVAS -->
-    <div class="hero-scroll-wrapper">
+    <div class="hero-scroll-wrapper" id="hero-section">
         <div class="sticky-viewport">
             <div id="canvasContainer" class="canvas-container">
                 <div id="heroLogo" class="hero-logo">
@@ -95,7 +95,7 @@
     </section>
 
     <!-- 5. TIMELINE GALLERY -->
-    <section class="timeline-section">
+    <section class="timeline-section" id="timeline-section">
         <div class="timeline-sticky" id="vantaCanvas">
             <div class="timeline-track" id="horizontalTrack">
                 <div class="timeline-card">
@@ -144,7 +144,7 @@
     </section>
 
     <!-- 6. RIVALRY SECTION -->
-    <section class="rivalry-section">
+    <section class="rivalry-section" id="rivalry-section">
         <div class="rivalry-sticky">
             <div class="rivalry-center-text">
                 <div class="rivalry-text-row rivalry-text-row--kal">
@@ -162,7 +162,7 @@
     </section>
 
     <!-- 7. VICTORY ARCHIVE -->
-    <section class="archive-section">
+    <section class="archive-section" id="archive-section">
         <div class="archive-background" id="phantomZone"></div>
         <div class="archive-header">
             <h2 class="archive-title">CONQUERED<br><span class="archive-subtitle">GODS</span></h2>
@@ -258,7 +258,7 @@
                     <div class="ear-box left">
                         <span>"The Voice of<br>Metropolis"</span>
                     </div>
-                    <h1 class="planet-logo">Daily <img src="images/daily-planet-logo.avif" class="planet-icon"
+                    <h1 class="planet-logo">Daily <img src="images/daily-planet-logo-text.avif" class="planet-icon"
                             alt="Planet"> Planet</h1>
                     <div class="ear-box right">
                         <span class="edition">EVENING EDITION</span>
@@ -322,7 +322,7 @@
     </section>
 
     <!-- 9. JUSTICE GANG -->
-    <section class="gang-section">
+    <section class="gang-section" id="gang-section">
         <div class="gang-header">
             <div class="gang-icon">
                 <img src="images/justice-gang-logo.avif" alt="Justice Gang Logo">
@@ -386,10 +386,73 @@
         </div>
     </section>
 
-    <!-- FOOTER -->
-    <footer class="main-footer">
-        <p>© KRYPTONIAN ARCHIVES</p>
-    </footer>
+<!-- FOOTER: THE FORTRESS INTERFACE -->
+<footer class="fortress-footer">
+    
+    <!-- background texture -->
+    <div class="fortress-bg"></div>
+
+    <!-- MAIN CONTENT WRAPPER -->
+    <div class="footer-content-wrapper">
+        
+        <!-- LEFT COLUMN: SYSTEM NODES -->
+        <div class="footer-col col-side col-left">
+            <h4 class="col-label">SYSTEM NODES</h4>
+            <ul class="footer-links">
+                <li><a href="#hero-section" data-hover="ORIGINS">ORIGINS</a></li>
+                <li><a href="#timeline-section" data-hover="TIMELINE">TIMELINE</a></li>
+                <li><a href="#rivalry-section" data-hover="RIVALRY">RIVALRY</a></li>
+                <li><a href="#archive-section" data-hover="ARCHIVES">ARCHIVES</a></li>
+                <li><a href="#gang-section" data-hover="JUSTICE GANG">JUSTICE GANG</a></li>
+            </ul>
+        </div>
+
+        <!-- CENTER COLUMN: SLOGAN -> CAPE -> BUTTON -->
+        <div class="footer-col col-center">
+            
+            <!-- 1. The Slogan (Bottom Layer) -->
+            <h2 class="footer-slogan">
+                <span>I AM AS</span>
+                <span class="slogan-highlight">HUMAN</span>
+                <span>AS ANYONE</span>
+            </h2>
+
+            <!-- 2. The Cape (Middle Layer - Smaller) -->
+            <div class="cape-container">
+                <img src="images/cape-flow.avif" alt="The Cape" class="cape-visual">
+            </div>
+        </div>
+
+        <!-- RIGHT COLUMN: SIGNAL FREQUENCIES -->
+        <div class="footer-col col-side col-right">
+            <h4 class="col-label">SIGNAL FREQUENCIES</h4>
+            <ul class="footer-links">
+                <li><a href="https://x.com/itsnikity/" data-hover="X" target="_blank">X</a></li>
+                <li><a href="https://www.instagram.com/itsnikity/" data-hover="INSTAGRAM" target="_blank">INSTAGRAM</a></li>
+                <li><a href="https://github.com/Nikityyy/" data-hover="GITHUB" target="_blank">GITHUB</a></li>
+                <li><a href="https://huggingface.co/Nikity/" data-hover="HUGGINGFACE" target="_blank">HUGGINGFACE</a></li>
+                <li><a href="https://nikity.is-a.dev/" data-hover="PORTFOLIO" target="_blank">PORTFOLIO</a></li>
+            </ul>
+        </div>
+
+    </div>
+
+    <!-- BOTTOM BAR (Sponsors & Legal) -->
+    <div class="footer-bottom">
+        <div class="sponsor-bar">
+            <img src="images/wayne-enterprises-logo.avif" alt="Wayne Enterprises" class="sponsor-logo">
+            <img src="images/star-labs-logo.avif" alt="S.T.A.R. Labs" class="sponsor-logo">
+            <img src="images/queen-ind-logo.avif" alt="Queen Industries" class="sponsor-logo">
+            <img src="images/daily-planet-logo.avif" alt="Daily Planet" class="sponsor-logo">
+        </div>
+
+        <div class="legal-bar">
+            <p class="ai-disclosure">
+                Visual artifacts synthesized via Neural Rendering (Nano Banana Pro & GPT Image 1.5) and via DC Fandom.
+            </p>
+        </div>
+    </div>
+</footer>
 
     <script src="assets/script.js"></script>
 </body>

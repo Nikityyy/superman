@@ -97,6 +97,8 @@ const ctxs = {
 // --- INITIALIZATION FLOW ---
 
 function init() {
+    if (window.location.hash) history.replaceState(null, "", window.location.pathname + window.location.search);
+
     if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
     window.scrollTo(0, 0);
 
@@ -165,6 +167,7 @@ function setupApp() {
     createBrushTip();
     prepareBackgrounds();
     generatePhantomZone();
+    setupFooterLinks();
 
     window.addEventListener('resize', handleResize);
     window.addEventListener('mousemove', handleMouseMove);
@@ -643,6 +646,43 @@ function generatePhantomZone() {
     window.addEventListener('resize', resize);
     resize();
     animate();
+}
+
+function setupFooterLinks() {
+    const links = document.querySelectorAll('.footer-links a');
+
+    links.forEach(link => {
+        const text = link.textContent.trim();
+        link.innerHTML = ''; // Clear original text
+        link.removeAttribute('data-hover'); // Remove old CSS hook
+
+        // Split text into characters
+        const chars = text.split('');
+
+        chars.forEach((char, index) => {
+            // Create container for the character pair
+            const container = document.createElement('span');
+            container.className = 'char-box';
+            container.style.setProperty('--i', index); // Index for stagger delay
+
+            // Handle spaces explicitly
+            const displayChar = char === ' ' ? '&nbsp;' : char;
+
+            // Top letter (Initial)
+            const topSpan = document.createElement('span');
+            topSpan.className = 'char-top';
+            topSpan.innerHTML = displayChar;
+
+            // Bottom letter (Hover state)
+            const bottomSpan = document.createElement('span');
+            bottomSpan.className = 'char-bottom';
+            bottomSpan.innerHTML = displayChar;
+
+            container.appendChild(topSpan);
+            container.appendChild(bottomSpan);
+            link.appendChild(container);
+        });
+    });
 }
 
 init();
