@@ -601,8 +601,7 @@ canvas {
     padding: 150px 5vw 100px 5vw;
     border-top: 1px solid var(--color-stroke);
     overflow: visible;
-    /* Changed border radius to be sharper/more aggressive */
-    border-radius: 0 0 50px 50px;
+    border-radius: 0 0 50% 50% / 0 0 3vw 3vw;
     box-shadow: 0 10px 50px rgba(0, 0, 0, 0.5);
 }
 
@@ -613,6 +612,7 @@ canvas {
     width: 100%;
     height: 100%;
     z-index: -1;
+    border-radius: 0 0 50% 50% / 0 0 3vw 3vw;
     background: radial-gradient(circle at 50% 30%, var(--color-bg-space) 0%, var(--color-bg-black) 80%);
 }
 
@@ -690,7 +690,8 @@ canvas {
 .archive-grid {
     display: grid;
     grid-template-columns: 1fr;
-    gap: 30px; /* Increased gap */
+    gap: 30px;
+    /* Increased gap */
     max-width: 1600px;
     margin: 0 auto;
 }
@@ -716,11 +717,11 @@ canvas {
     background: rgba(20, 20, 30, 0.6);
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
-    
+
     /* Tech Borders */
     border: 1px solid rgba(255, 255, 255, 0.1);
     border-top: 1px solid rgba(255, 255, 255, 0.3);
-    
+
     transition: transform 0.4s ease, border-color 0.4s ease, background-color 0.4s;
     overflow: hidden;
 }
@@ -729,7 +730,7 @@ canvas {
     transform: translateY(-10px);
     background: rgba(30, 30, 40, 0.8);
     border-color: rgba(255, 255, 255, 0.5);
-    box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
 }
 
 .archive-entry__content {
@@ -749,8 +750,8 @@ canvas {
     align-items: center;
     position: relative;
     margin-bottom: 20px;
-    border: 1px solid rgba(255,255,255,0.05);
-    background: radial-gradient(circle, rgba(0,0,0,0.5) 0%, rgba(0,0,0,0) 70%);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    background: radial-gradient(circle, rgba(0, 0, 0, 0.5) 0%, rgba(0, 0, 0, 0) 70%);
 }
 
 /* Grid lines on the image background for tech feel */
@@ -787,7 +788,7 @@ canvas {
 .archive-entry__meta {
     margin-top: auto;
     display: grid;
-    grid-template-areas: 
+    grid-template-areas:
         "year status"
         "name name";
     gap: 5px;
@@ -797,16 +798,17 @@ canvas {
 
 .archive-entry__year {
     grid-area: year;
-    font-family: 'Oswald', sans-serif; /* Condensed tech font */
+    font-family: 'Oswald', sans-serif;
+    /* Condensed tech font */
     font-size: 3rem;
     line-height: 0.8;
-    color: rgba(255,255,255,0.1);
+    color: rgba(255, 255, 255, 0.1);
     transition: color 0.4s ease;
     align-self: end;
 }
 
 .archive-entry:hover .archive-entry__year {
-    color: rgba(255,255,255,0.8);
+    color: rgba(255, 255, 255, 0.8);
 }
 
 .archive-entry__status {
@@ -827,13 +829,13 @@ canvas {
     letter-spacing: 1px;
     margin-top: 10px;
     color: var(--color-text-white);
-    text-shadow: 0 0 10px rgba(0,0,0,0.5);
+    text-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
 }
 
 /* --- 8. DAILY PLANET (FULLSCREEN REPLICA) --- */
 .newspaper-section {
     position: relative;
-    z-index: 40; 
+    z-index: 40;
     background-color: #e3e3e3;
     color: #111;
     font-family: 'Playfair Display', serif;
@@ -843,7 +845,7 @@ canvas {
     padding: 8vw 20px 80px 20px;
     border-radius: 0;
     box-shadow: none;
-    
+
     display: flex;
     justify-content: center;
 }
@@ -1158,6 +1160,259 @@ canvas {
 .newspaper-section .reveal-up {
     opacity: 1;
     transform: none;
+}
+
+/* --- 9. JUSTICE GANG SECTION --- */
+.gang-section {
+    position: relative;
+    z-index: 45;
+    background-color: var(--color-bg-dark);
+    padding: 100px 0 150px 0;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: 100vh;
+}
+
+/* Header Styling */
+.gang-header {
+    text-align: center;
+    margin-bottom: 60px;
+    position: relative;
+    z-index: 10;
+    pointer-events: none;
+}
+
+.gang-icon {
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.gang-icon img {
+    width: 60px;
+    filter: drop-shadow(0 0 20px rgba(226, 0, 26, 0.6));
+}
+
+.gang-title {
+    font-family: 'CC Ultimatum', sans-serif;
+    font-size: clamp(3rem, 6vw, 6rem);
+    line-height: 0.9;
+    color: #fff;
+    text-transform: uppercase;
+    margin: 0;
+    letter-spacing: 2px;
+}
+
+.gang-subtitle {
+    font-weight: 400;
+    color: var(--color-accent-red);
+    display: block;
+    font-size: clamp(4rem, 8vw, 8rem);
+    margin-top: -10px;
+    text-shadow: 0 10px 40px rgba(226, 0, 26, 0.3);
+}
+
+/* --- THE FANNED DECK --- */
+.gang-deck {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+    width: 100%;
+    padding: 20px 0;
+    isolation: isolate;
+}
+
+/* --- THE CARD --- */
+.gang-card {
+    /* 
+       Variables based on the video's logic:
+       --i: Index from center (-2 to 2) 
+       --abs-i: Absolute value of i (0, 1, 2)
+    */
+    --abs-i: max(var(--i), calc(var(--i) * -1));
+
+    /* Dynamic Fan Configuration */
+    --base-rotate: calc(var(--i) * 8deg);
+    --base-y: calc(var(--abs-i) * 35px);
+    /* The Arc: Center is high, sides are low */
+
+    /* The "Push" Variable (Modified by siblings on hover) */
+    --offset-x: 0px;
+
+    position: relative;
+    width: 280px;
+    height: 420px;
+    flex-shrink: 0;
+    border-radius: 24px;
+
+    /* Negative margin creates the "Hand of Cards" overlap */
+    margin-left: -130px;
+
+    /* 
+       The Transform Stack:
+       1. Rotate based on index
+       2. Push Down based on index (Arch)
+       3. Push Left/Right based on Hover interactions (The Video Logic)
+    */
+    transform:
+        rotate(var(--base-rotate)) translateY(var(--base-y)) translateX(var(--offset-x));
+
+    transform-origin: bottom center;
+
+    /* Styling */
+    background: #000;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    box-shadow: -10px 10px 30px rgba(0, 0, 0, 0.8);
+    overflow: hidden;
+    cursor: pointer;
+
+    /* Pyramid Stacking: Center (Index 0) is highest, sides are lower */
+    z-index: calc(10 - var(--abs-i));
+
+    /* Springy Physics like the video */
+    transition:
+        transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1),
+        filter 0.3s ease,
+        z-index 0s;
+}
+
+/* Reset margin for the first card so the whole deck is centered */
+.gang-card:first-child {
+    margin-left: 0;
+}
+
+.gang-card img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    filter: grayscale(60%) contrast(1.1) brightness(0.8);
+    transition: filter 0.4s ease, transform 0.5s ease;
+}
+
+/* --- CARD INFO (Overlay) --- */
+.gang-info {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    padding: 120px 20px 40px 20px;
+    background: linear-gradient(to top, rgba(0, 0, 0, 1), transparent);
+    color: white;
+    transform: translateY(100%);
+    transition: transform 0.4s cubic-bezier(0.19, 1, 0.22, 1);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+}
+
+.gang-info h3 {
+    font-family: 'CC Ultimatum', sans-serif;
+    font-size: 2rem;
+    margin: 0;
+    text-transform: uppercase;
+    color: #fff;
+    letter-spacing: 1px;
+}
+
+.gang-info span {
+    font-family: 'Playfair Display', serif;
+    font-style: italic;
+    color: var(--color-accent-yellow);
+    font-size: 1.1rem;
+}
+
+/* 2. The Active Hovered Card */
+.gang-card:hover {
+    z-index: 100;
+    /* Pop to front */
+
+    border-color: rgba(255, 255, 255, 0.8);
+    box-shadow: 0 40px 80px rgba(0, 0, 0, 0.8);
+}
+
+.gang-card:hover img {
+    transform: scale(1.1);
+    filter: grayscale(0%) brightness(1) contrast(1.1);
+}
+
+.gang-card:hover .gang-info {
+    transform: translateY(0);
+}
+
+/* 
+   3. SIBLING PUSH LOGIC (The "Parting the Sea" effect) 
+   We update the --offset-x variable on the neighbors.
+*/
+
+/* Immediate Right Sibling: Push Right */
+.gang-card:hover+.gang-card {
+    --offset-x: 50px;
+}
+
+/* 2nd Right Sibling: Push Right slightly less */
+.gang-card:hover+.gang-card+.gang-card {
+    --offset-x: 25px;
+}
+
+/* Immediate Left Sibling: Push Left */
+/* We use :has() to look "backwards" in the DOM */
+.gang-card:has(+ .gang-card:hover) {
+    --offset-x: -50px;
+}
+
+/* 2nd Left Sibling: Push Left slightly less */
+.gang-card:has(+ .gang-card + .gang-card:hover) {
+    --offset-x: -25px;
+}
+
+/* --- RESPONSIVE --- */
+@media (max-width: 1024px) {
+    .gang-card {
+        width: 240px;
+        height: 360px;
+        margin-left: -100px;
+    }
+}
+
+@media (max-width: 768px) {
+    .gang-deck {
+        flex-direction: column;
+        height: auto;
+        padding-bottom: 50px;
+    }
+
+    .gang-card {
+        width: 85%;
+        height: 400px;
+        margin-left: 0;
+        margin-bottom: -300px;
+        /* Vertical stack */
+
+        /* Reset transform for vertical mode */
+        transform: rotate(calc(var(--i) * 3deg)) translateY(0) translateX(0);
+    }
+
+    .gang-deck:hover .gang-card {
+        margin-bottom: -280px;
+    }
+
+    .gang-card:hover {
+        margin-bottom: 20px;
+        /* Give it space */
+        transform: scale(1.05);
+    }
+
+    /* Disable the horizontal push logic on mobile */
+    .gang-card:hover+.gang-card,
+    .gang-card:has(+ .gang-card:hover) {
+        --offset-x: 0px;
+    }
 }
 
 /* --- FOOTER --- */

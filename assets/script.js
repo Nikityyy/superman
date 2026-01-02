@@ -37,7 +37,7 @@ const DOM = {
     },
     canvas: {
         main: document.getElementById('mainCanvas'),
-        wrapper: document.getElementById('canvasContainer'), 
+        wrapper: document.getElementById('canvasContainer'),
         logo: document.getElementById('heroLogo'),
         scrollTrack: document.querySelector('.hero-scroll-wrapper')
     },
@@ -213,7 +213,7 @@ function updateScrollDrivenLogic() {
     if (DOM.rivalry.section) {
         updateRivalryScroll();
     }
-    
+
     // NOTE: Newspaper tilt logic removed to keep it flat/fullscreen
 }
 
@@ -514,6 +514,21 @@ function setupObservers() {
             child.classList.add('reveal-up');
             observer.observe(child);
         });
+    }
+
+    const gangHeader = document.querySelector('.gang-header');
+    if (gangHeader) {
+        Array.from(gangHeader.children).forEach((child, i) => {
+            child.classList.add('reveal-up');
+            child.style.transitionDelay = `${i * 100}ms`;
+            observer.observe(child);
+        });
+    }
+
+    const gangDeck = document.querySelector('.gang-deck');
+    if (gangDeck) {
+        gangDeck.classList.add('reveal-up');
+        observer.observe(gangDeck);
     }
 }
 
