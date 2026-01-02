@@ -1,6 +1,6 @@
 # Superman | The Man of Steel
 
-<video src="video/preview.mp4" controls muted loop playsinline></video>
+![Preview Video](video/preview.gif)
 
 [Website Link](https://nikity.is-a.dev/superman)
 
