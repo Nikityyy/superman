@@ -202,7 +202,7 @@ body.loaded .loader__content {
 .marquee-line {
     display: flex;
     width: 100%;
-    transform: translateZ(0) rotate(-2deg) scale(1.1);
+    transform: translate3d(0, 0, 0) rotate(-2deg) scale(1.1);
     padding-bottom: 2.5dvh;
 }
 
@@ -210,7 +210,6 @@ body.loaded .loader__content {
     display: flex;
     white-space: nowrap;
     flex-shrink: 0;
-    will-change: transform;
 }
 
 .marquee-text {
@@ -272,7 +271,7 @@ body.loaded .loader__content {
     position: relative;
     width: 100%;
     height: 100%;
-    transform: translateZ(0);
+    transform: translate3d(0, 0, 0);
 }
 
 canvas {
@@ -404,6 +403,7 @@ canvas {
     padding-left: 10vw;
     position: relative;
     z-index: 5;
+    transform: translate3d(0, 0, 0);
 }
 
 .timeline-card {
@@ -462,7 +462,8 @@ canvas {
 .parallax-img,
 .archive-entry__img,
 .rivalry-img {
-    transform: translateZ(0);
+    will-change: transform;
+    transform: translate3d(0, 0, 0);;
     backface-visibility: hidden;
     -webkit-optimize-contrast: true;
 }
