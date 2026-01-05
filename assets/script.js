@@ -1,7 +1,8 @@
 // --- CONFIGURATION ---
 const CONFIG = {
     canvas: {
-        particleCount: 150,
+        particleCount: 75,
+        particleCountMobile: 30,
         brushSize: 200,
         smoothing: 0.12,
         idleTimeout: 400
@@ -21,8 +22,8 @@ const CONFIG = {
         archiveLine: 0xdcebf7
     },
     archive: {
-        count: 60,
-        countMobile: 30,
+        count: 40,
+        countMobile: 20,
         connectionDist: 150,
         speed: 0.35,
         diamondChance: 0.6
@@ -109,20 +110,53 @@ function init() {
     });
 }
 
+// Helper to load external scripts
+function loadScript(src) {
+    return new Promise((resolve, reject) => {
+        const script = document.createElement('script');
+        script.src = src;
+        script.onload = resolve;
+        script.onerror = reject; // Reject promise on error
+        document.head.appendChild(script);
+    });
+}
+
+// Helper to load Google Fonts
+function loadGoogleFonts() {
+    return new Promise((resolve, reject) => {
+        const link = document.createElement('link');
+        link.rel = 'stylesheet';
+        link.href = 'https://fonts.googleapis.com/css2?family=Anton:wght@700&family=Sedgwick+Ave+Display:wght@400&family=Oswald:wght@700&family=Playfair+Display:ital,wght@0,400;0,700;1,400;1,700&family=UnifrakturMaguntia&display=swap';
+        link.onload = resolve;
+        link.onerror = reject; // Reject promise on error
+        document.head.appendChild(link);
+    });
+}
+
+function loadVantaDependencies() {
+    // 1. Load Three.js first
+    return loadScript('https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js')
+        .then(() => {
+            // Check if Three.js is actually in the window
+            if (!window.THREE) {
+                throw new Error("Three.js loaded but window.THREE is missing");
+            }
+            // 2. Load Vanta ONLY after Three.js is ready
+            return loadScript('https://cdn.jsdelivr.net/npm/vanta@latest/dist/vanta.clouds.min.js');
+        });
+}
+
+
 function startPreloading() {
     document.body.style.overflow = 'hidden';
 
-    // Load external resources first
     const fontPromise = loadGoogleFonts();
-    const scriptPromises = [
-        loadScript('https://unpkg.com/@studio-freight/lenis@1.0.33/dist/lenis.min.js')
-    ];
-    const externalPromises = [fontPromise, ...scriptPromises];
+    const lenisPromise = loadScript('https://unpkg.com/@studio-freight/lenis@1.0.33/dist/lenis.min.js');
 
     // Initialize marquee after fonts are loaded
     fontPromise.then(() => initMarqueeSystem());
 
-    // Then load images and initialize vanta after scripts are loaded
+    // Load main image assets (clark, superman, logo)
     const imageKeys = Object.keys(CONFIG.images);
     const assetPromises = imageKeys.map(key => {
         return new Promise((resolve) => {
@@ -130,21 +164,78 @@ function startPreloading() {
             img.crossOrigin = "anonymous";
             img.src = CONFIG.images[key];
             img.onload = () => { state.assets[key] = img; resolve(); };
-            img.onerror = resolve;
+            img.onerror = () => { console.warn(`Failed to load asset: ${CONFIG.images[key]}`); resolve(); }; // Resolve on error, don't block
         });
     });
 
+    // Decode all other DOM images for robust preloading
     const domImages = Array.from(document.querySelectorAll('img'));
     const decodePromises = domImages.map(img => {
-        return img.decode().catch(() => new Promise(r => { img.onload = r; img.onerror = r; }));
+        return img.decode().catch(error => {
+            console.warn(`Failed to decode image: ${img.src || 'unknown'}`, error);
+            // Fallback for decode failure: use onload/onerror, resolve after a timeout if those don't fire quickly
+            return new Promise(resolve => {
+                const timer = setTimeout(() => {
+                    console.warn(`Image decode/load fallback timed out for: ${img.src || 'unknown'}`);
+                    resolve();
+                }, 2000); // Max 2 seconds for fallback load
+                img.onload = () => { clearTimeout(timer); resolve(); };
+                img.onerror = () => { clearTimeout(timer); console.warn(`Image load failed for: ${img.src || 'unknown'}`); resolve(); };
+                // If the image is already complete (e.g., cached), onload/onerror might not fire immediately
+                if (img.complete) { clearTimeout(timer); resolve(); }
+            });
+        });
     });
 
-    const vantaPromise = Promise.all(externalPromises).then(() => {
-        initVanta();
-        return new Promise(resolve => setTimeout(resolve, 500));
-    });
+    // Vanta initialization promise: depends on vantaDepsPromise
+    const vantaInitPromise = loadVantaDependencies()
+        .then(() => {
+            // Add a small buffer to ensure scripts are parsed
+            return new Promise(resolve => setTimeout(resolve, 100));
+        })
+        .then(() => {
+            return new Promise(resolve => {
+                // Check if the library and the element exist
+                if (window.VANTA && DOM.timeline.sticky) {
+                    try {
+                        state.vanta = VANTA.CLOUDS({
+                            el: DOM.timeline.sticky,
+                            mouseControls: true,
+                            touchControls: true,
+                            gyroControls: false,
+                            minHeight: 200.00,
+                            minWidth: 200.00,
+                            skyColor: CONFIG.colors.sky,
+                            cloudColor: CONFIG.colors.cloud,
+                            cloudShadowColor: CONFIG.colors.shadow,
+                            sunColor: CONFIG.colors.sun,
+                            sunGlareColor: CONFIG.colors.glare,
+                            sunlightColor: 0xffffff,
+                            speed: 0.3
+                        });
+                        console.log("Vanta initialized successfully.");
+                    } catch (e) {
+                        console.error("Vanta threw an error during init:", e);
+                    }
+                } else {
+                    console.warn("VANTA object or target element missing.");
+                }
+                resolve(); // Always resolve so loader doesn't hang
+            });
+        })
+        .catch(error => {
+            console.error("Vanta dependency loading failed:", error);
+            return Promise.resolve(); // Continue application even if background fails
+        });
 
-    const allPromises = [...externalPromises, ...assetPromises, ...decodePromises, vantaPromise, document.fonts.ready];
+    const allPromises = [
+        fontPromise,
+        lenisPromise,
+        ...assetPromises,
+        ...decodePromises,
+        vantaInitPromise,
+        document.fonts.ready
+    ];
 
     let loaded = 0;
     const total = allPromises.length;
@@ -155,6 +246,9 @@ function startPreloading() {
             const pct = Math.round((loaded / total) * 100);
             DOM.loader.bar.style.width = `${pct}%`;
         }
+    }).catch(e => {
+        loaded++; // Increment anyway so bar finishes
+        if (DOM.loader.bar) DOM.loader.bar.style.width = `${Math.round((loaded / total) * 100)}%`;
     }));
 
     const minTimePromise = new Promise(r => setTimeout(r, 1500));
@@ -318,6 +412,8 @@ function updateCanvasPhysics() {
     const targetSize = state.mouse.active ? CONFIG.canvas.brushSize : 0;
     state.brushSize += (targetSize - state.brushSize) * 0.1;
 
+    const maxParticles = state.width < 768 ? CONFIG.canvas.particleCountMobile : CONFIG.canvas.particleCount;
+
     if (state.brushSize > 0.5) {
         const moveDist = Math.hypot(dx, dy);
         const steps = Math.ceil(moveDist / (state.brushSize * 0.25));
@@ -335,8 +431,8 @@ function updateCanvasPhysics() {
         }
     }
 
-    if (state.particles.length > CONFIG.canvas.particleCount) {
-        state.particles.splice(0, state.particles.length - CONFIG.canvas.particleCount);
+    if (state.particles.length > maxParticles) {
+        state.particles.splice(0, state.particles.length - maxParticles);
     }
 }
 
@@ -414,7 +510,7 @@ function handleResize() {
     };
 
     if (state.assets.clark && state.assets.superman) prepareBackgrounds();
-    if (state.vanta) state.vanta.resize();
+    if (state.vanta) state.vanta.resize(); // Vanta resize only if it successfully initialized
 
     // --- RESPONSIVE LOGIC ADDITION ---
     // Recalculate horizontal track explicitly
@@ -503,26 +599,6 @@ function drawImageProp(ctx, img, x, y, w, h, offsetX = 0.5, offsetY = 0.5) {
     ctx.drawImage(img, cx, cy, cw, ch, x, y, w, h);
 }
 
-function loadScript(src) {
-    return new Promise((resolve, reject) => {
-        const script = document.createElement('script');
-        script.src = src;
-        script.onload = resolve;
-        script.onerror = reject;
-        document.head.appendChild(script);
-    });
-}
-
-function loadGoogleFonts() {
-    return new Promise((resolve, reject) => {
-        const link = document.createElement('link');
-        link.rel = 'stylesheet';
-        link.href = 'https://fonts.googleapis.com/css2?family=Anton:wght@700&family=Oswald:wght@700&family=Playfair+Display:ital,wght@0,400;0,700;1,400;1,700&family=UnifrakturMaguntia&display=swap';
-        link.onload = resolve;
-        link.onerror = reject;
-        document.head.appendChild(link);
-    });
-}
 
 function initMarqueeSystem() {
     const container = document.getElementById('marqueeSystem');
@@ -563,29 +639,6 @@ function initMarqueeSystem() {
         line.appendChild(createTrack());
 
         container.appendChild(line);
-    }
-}
-
-function initVanta() {
-    try {
-        if (!DOM.timeline.sticky) return;
-        state.vanta = VANTA.CLOUDS({
-            el: DOM.timeline.sticky,
-            mouseControls: true,
-            touchControls: true,
-            gyroControls: false,
-            minHeight: 200.00,
-            minWidth: 200.00,
-            skyColor: CONFIG.colors.sky,
-            cloudColor: CONFIG.colors.cloud,
-            cloudShadowColor: CONFIG.colors.shadow,
-            sunColor: CONFIG.colors.sun,
-            sunGlareColor: CONFIG.colors.glare,
-            sunlightColor: 0xffffff,
-            speed: 1.0
-        });
-    } catch (e) {
-        console.warn("Vanta failed to init", e);
     }
 }
 
@@ -701,42 +754,46 @@ function generatePhantomZone() {
         }
     }
 
+    let frameCounter = 0;
+    const throttleRate = 2;
+
     function animate() {
-        ctx.clearRect(0, 0, w, h);
-
-        particles.forEach(p => {
-            p.update();
-            p.draw();
-        });
-
-        const maxDist = CONFIG.archive.connectionDist;
-
-        for (let i = 0; i < particles.length; i++) {
-            for (let j = i + 1; j < particles.length; j++) {
-                const dx = particles[i].x - particles[j].x;
-                const dy = particles[i].y - particles[j].y;
-                const dist = Math.hypot(dx, dy);
-
-                if (dist < maxDist) {
-                    const opacity = 1 - (dist / maxDist);
-                    ctx.strokeStyle = `rgba(${colLine}, ${opacity * 0.15})`;
-                    ctx.lineWidth = 1;
-                    ctx.beginPath();
-                    ctx.moveTo(particles[i].x, particles[i].y);
-                    ctx.lineTo(particles[j].x, particles[j].y);
-                    ctx.stroke();
-                }
-            }
-        }
+        state.archiveRequestFrame = requestAnimationFrame(animate); // Always request next frame
 
         const rect = container.getBoundingClientRect();
-        if (rect.bottom > 0 && rect.top < window.innerHeight) {
-            state.archiveRequestFrame = requestAnimationFrame(animate);
-        } else {
-            setTimeout(() => {
-                state.archiveRequestFrame = requestAnimationFrame(animate);
-            }, 500);
+        const isVisible = (rect.bottom > 0 && rect.top < window.innerHeight);
+
+        if (isVisible && frameCounter % throttleRate === 0) {
+            ctx.clearRect(0, 0, w, h);
+
+            particles.forEach(p => {
+                p.update();
+                p.draw();
+            });
+
+            const maxDist = CONFIG.archive.connectionDist;
+
+            for (let i = 0; i < particles.length; i++) {
+                for (let j = i + 1; j < particles.length; j++) {
+                    const dx = particles[i].x - particles[j].x;
+                    const dy = particles[i].y - particles[j].y;
+                    const dist = Math.hypot(dx, dy);
+
+                    if (dist < maxDist) {
+                        const opacity = 1 - (dist / maxDist);
+                        ctx.strokeStyle = `rgba(${colLine}, ${opacity * 0.15})`;
+                        ctx.lineWidth = 1;
+                        ctx.beginPath();
+                        ctx.moveTo(particles[i].x, particles[i].y);
+                        ctx.lineTo(particles[j].x, particles[j].y);
+                        ctx.stroke();
+                    }
+                }
+            }
+        } else if (!isVisible) {
+            frameCounter = -1; // Set to -1 because it will be incremented to 0
         }
+        frameCounter++;
     }
 
     window.addEventListener('resize', resize);

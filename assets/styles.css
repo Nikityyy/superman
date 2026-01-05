@@ -555,7 +555,7 @@ canvas {
 .parallax-img,
 .archive-entry__img,
 .rivalry-img {
-    will-change: transform;
+    will-change: transform, filter;
     transform: translate3d(0, 0, 0);
     ;
     backface-visibility: hidden;
@@ -634,8 +634,9 @@ canvas {
 }
 
 .rivalry-scribble {
-    font-family: 'Brush Script MT', cursive;
-    font-size: 4vw;
+    font-family: 'Sedgwick Ave Display', cursive;
+    font-weight: 400;
+    font-size: 7vw;
     position: absolute;
     z-index: 12;
     mix-blend-mode: multiply;
@@ -645,15 +646,15 @@ canvas {
 
 .rivalry-scribble--kal {
     color: var(--color-accent-red);
-    top: -15%;
-    left: 30%;
+    top: -25%;
+    left: 25%;
     transform: rotate(-10deg);
 }
 
 .rivalry-scribble--lex {
     color: var(--color-accent-purple);
-    bottom: -30%;
-    right: 30%;
+    bottom: -40%;
+    right: 20%;
     transform: rotate(5deg);
 }
 
@@ -753,7 +754,7 @@ canvas {
 }
 
 .archive-title {
-    font-size: 8vw;
+    font-size: clamp(1.2rem, 8vw, 8rem);
     line-height: 0.9;
     margin: 0;
     text-transform: uppercase;
@@ -769,7 +770,7 @@ canvas {
 .archive-description {
     margin-top: 40px;
     max-width: 500px;
-    font-size: 1.1rem;
+    font-size: clamp(1rem, 4vw, 1.4rem);
     line-height: 1.6;
     color: var(--color-text-muted);
     border-left: 2px solid var(--color-stroke);
@@ -870,7 +871,6 @@ canvas {
 .archive-entry:hover .archive-entry__img {
     transform: scale(1.05);
     filter: grayscale(0%) brightness(1.1) contrast(1.1);
-    opacity: 1;
 }
 
 /* New Metadata Layout: HUD Style */
@@ -1090,11 +1090,7 @@ canvas {
     text-align: center;
     white-space: nowrap;
     /* Prevent wrapping to maintain center structure */
-}
-
-.meta-center {
     flex-grow: 1;
-    text-align: center;
 }
 
 /* --- C. GRID BODY --- */
@@ -1119,6 +1115,7 @@ canvas {
     font-size: 7vw;
     /* Condensed slab look */
     margin-bottom: 5px;
+    letter-spacing: -5px;
 }
 
 .hl-mid {
@@ -1126,7 +1123,7 @@ canvas {
     /* Massive */
     text-transform: uppercase;
     margin-top: 10px;
-    line-height: 1.0;
+    letter-spacing: -10px;
 }
 
 /* Article */
