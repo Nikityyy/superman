@@ -273,6 +273,7 @@ function setupApp() {
     prepareBackgrounds();
     generatePhantomZone();
     setupLinks();
+    setupArchiveClicks();
 
     window.addEventListener('resize', handleResize);
     window.addEventListener('mousemove', handleMouseMove);
@@ -682,6 +683,15 @@ function setupObservers() {
         gangDeck.classList.add('reveal-up');
         observer.observe(gangDeck);
     }
+}
+
+function setupArchiveClicks() {
+    const entries = document.querySelectorAll('.archive-entry');
+    entries.forEach(entry => {
+        entry.addEventListener('click', () => {
+            entry.classList.toggle('is-flipped');
+        });
+    });
 }
 
 function generatePhantomZone() {

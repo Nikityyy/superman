@@ -557,7 +557,6 @@ canvas {
 .rivalry-img {
     will-change: transform, filter;
     transform: translate3d(0, 0, 0);
-    ;
     backface-visibility: hidden;
     -webkit-optimize-contrast: true;
 }
@@ -781,7 +780,6 @@ canvas {
     display: grid;
     grid-template-columns: 1fr;
     gap: 30px;
-    /* Increased gap */
     max-width: 1600px;
     margin: 0 auto;
 }
@@ -798,43 +796,57 @@ canvas {
     }
 }
 
-/* --- NEW CARD DESIGN: CRYSTALLINE DATA PANE --- */
 .archive-entry {
     position: relative;
-    display: flex;
-    flex-direction: column;
-    /* Glassmorphism Background */
-    background: rgba(20, 20, 30, 0.6);
+    height: 550px;
+    perspective: 1200px;
+    cursor: pointer;
+}
+
+.archive-card-inner {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    text-align: left;
+    transition: transform 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    transform-style: preserve-3d;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+    border-radius: 4px;
+}
+
+.archive-entry.is-flipped .archive-card-inner {
+    transform: rotateY(180deg);
+}
+
+.archive-entry:hover .archive-card-inner {
+    box-shadow: 0 30px 60px rgba(0, 0, 0, 0.8);
+}
+
+.archive-face {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-top: 1px solid rgba(255, 255, 255, 0.3);
+    background: rgba(20, 20, 30, 0.85);
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
 
-    /* Tech Borders */
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-top: 1px solid rgba(255, 255, 255, 0.3);
-
-    transition: transform 0.4s ease, border-color 0.4s ease, background-color 0.4s;
-    overflow: hidden;
-}
-
-.archive-entry:hover {
-    transform: translateY(-10px);
-    background: rgba(30, 30, 40, 0.8);
-    border-color: rgba(255, 255, 255, 0.5);
-    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
-}
-
-.archive-entry__content {
-    flex: 1;
     display: flex;
     flex-direction: column;
+}
+
+.archive-front {
     padding: 25px;
-    position: relative;
-    z-index: 2;
 }
 
 .archive-entry__visual {
     flex: 1 1 auto;
-    min-height: 300px;
+    width: 100%;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -842,9 +854,9 @@ canvas {
     margin-bottom: 20px;
     border: 1px solid rgba(255, 255, 255, 0.05);
     background: radial-gradient(circle, rgba(0, 0, 0, 0.5) 0%, rgba(0, 0, 0, 0) 70%);
+    overflow: hidden;
 }
 
-/* Grid lines on the image background for tech feel */
 .archive-entry__visual::before {
     content: '';
     position: absolute;
@@ -855,13 +867,33 @@ canvas {
     z-index: 1;
 }
 
+.click-hint {
+    position: absolute;
+    bottom: 10px;
+    right: 10px;
+    font-family: monospace;
+    font-size: 0.7rem;
+    color: var(--color-accent-red);
+    border: 1px solid var(--color-accent-red);
+    padding: 2px 6px;
+    opacity: 0;
+    transform: translateY(10px);
+    transition: all 0.3s ease;
+    z-index: 10;
+    background: rgba(0, 0, 0, 0.8);
+}
+
+.archive-entry:hover .click-hint {
+    opacity: 1;
+    transform: translateY(0);
+}
+
 .archive-entry__img {
     width: auto;
     max-height: 80%;
     max-width: 90%;
     object-fit: contain;
     z-index: 5;
-    /* Ghostly appearance by default */
     filter: grayscale(100%) brightness(0.7) contrast(1.2);
     opacity: 0.8;
     transition: all 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
@@ -873,7 +905,6 @@ canvas {
     filter: grayscale(0%) brightness(1.1) contrast(1.1);
 }
 
-/* New Metadata Layout: HUD Style */
 .archive-entry__meta {
     margin-top: auto;
     display: grid;
@@ -888,7 +919,6 @@ canvas {
 .archive-entry__year {
     grid-area: year;
     font-family: 'Oswald', sans-serif;
-    /* Condensed tech font */
     font-size: 3rem;
     line-height: 0.8;
     color: rgba(255, 255, 255, 0.1);
@@ -920,6 +950,98 @@ canvas {
     color: var(--color-text-white);
     text-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
 }
+
+
+.archive-back {
+    transform: rotateY(180deg);
+    background: rgba(10, 10, 15, 0.95);
+    padding: 30px;
+    display: flex;
+    flex-direction: column;
+}
+
+.back-header {
+    border-bottom: 2px solid var(--color-accent-red);
+    padding-bottom: 15px;
+    margin-bottom: 20px;
+}
+
+.back-header h3 {
+    margin: 0;
+    font-family: 'Oswald', sans-serif;
+    font-size: 2.2rem;
+    color: var(--color-text-white);
+    line-height: 1;
+    text-transform: uppercase;
+}
+
+.back-header span {
+    font-family: monospace;
+    color: var(--color-accent-red);
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    display: block;
+    margin-top: 5px;
+}
+
+.back-body {
+    flex: 1;
+    overflow-y: auto;
+    padding-right: 5px;
+}
+
+.back-body::-webkit-scrollbar {
+    width: 4px;
+}
+
+.back-body::-webkit-scrollbar-thumb {
+    background-color: #333;
+}
+
+.stat-block {
+    margin-bottom: 25px;
+}
+
+.stat-block h4 {
+    font-size: 0.9rem;
+    color: var(--color-text-muted);
+    border-left: 3px solid var(--color-accent-yellow);
+    padding-left: 10px;
+    margin: 0 0 10px 0;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.stat-block ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.stat-block li {
+    position: relative;
+    padding-left: 15px;
+    margin-bottom: 8px;
+    font-size: 0.95rem;
+    line-height: 1.4;
+    color: #ddd;
+}
+
+.stat-block li::before {
+    content: '>';
+    position: absolute;
+    left: 0;
+    color: var(--color-accent-red);
+    font-size: 0.8rem;
+    top: 2px;
+}
+
+.stat-block strong {
+    color: #fff;
+    font-weight: 700;
+}
+
 
 /* --- 8. DAILY PLANET (FULLSCREEN REPLICA) --- */
 .newspaper-section {
