@@ -125,8 +125,6 @@ body:not(.loaded) .timeline-sticky {
     align-items: stretch;
     text-decoration: none;
     background: rgba(11, 11, 11, 0.8);
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
     border: 1px solid rgba(255, 255, 255, 0.2);
     transition: border-color 0.30s ease;
     cursor: pointer;
@@ -216,7 +214,13 @@ body:not(.loaded) .timeline-sticky {
 .loader__progress-track {
     width: 200px;
     height: 2px;
-    background: var(--color-stroke);
+    background-image: repeating-linear-gradient(
+        110deg,
+        var(--color-stroke),
+        var(--color-stroke) 10px,
+        var(--color-bg-black) 10px,
+        var(--color-bg-black) 20px
+    );
     position: relative;
     overflow: hidden;
 }
@@ -227,9 +231,15 @@ body:not(.loaded) .timeline-sticky {
     left: 0;
     height: 100%;
     width: 0%;
-    background-color: var(--color-accent-red);
-    box-shadow: 0 0 10px var(--color-accent-red);
-    transition: width 0.1s linear;
+    background-image: repeating-linear-gradient(
+        110deg,
+        var(--color-accent-red),
+        var(--color-accent-red) 10px,
+        transparent 10px,
+        transparent 20px
+    );
+    box-shadow: 0 0 15px var(--color-accent-red);
+    transition: none; 
 }
 
 .loader__text {
@@ -833,8 +843,6 @@ canvas {
     border: 1px solid rgba(255, 255, 255, 0.1);
     border-top: 1px solid rgba(255, 255, 255, 0.3);
     background: rgba(20, 20, 30, 0.85);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
 
     display: flex;
     flex-direction: column;

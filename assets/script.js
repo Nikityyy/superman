@@ -24,7 +24,6 @@ const CONFIG = {
     archive: {
         count: 40,
         countMobile: 20,
-        connectionDist: 150,
         speed: 0.35,
         diamondChance: 0.6
     }
@@ -99,14 +98,22 @@ const ctxs = {
 
 function init() {
     if (window.location.hash) history.replaceState(null, "", window.location.pathname + window.location.search);
-
     if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
     window.scrollTo(0, 0);
 
-    startPreloading().then(() => {
+    // 1. Start Critical Loading (Fonts & Hero only)
+    startCriticalPreloading().then(() => {
+        // 2. Hide Loader & Reveal Site
+        revealApp();
+
+        // 3. Setup Logic
         setupApp();
         setupObservers();
         animate();
+
+        // 4. Load Heavy/Non-Critical items in background (Vanta, Bottom Images)
+        // This prevents the "All-or-Nothing" bottleneck
+        setTimeout(loadBackgroundAssets, 200);
     });
 }
 
@@ -147,16 +154,14 @@ function loadVantaDependencies() {
 }
 
 
-function startPreloading() {
+function startCriticalPreloading() {
     document.body.style.overflow = 'hidden';
 
+    // A. Critical Promises (Viewport Only)
     const fontPromise = loadGoogleFonts();
     const lenisPromise = loadScript('https://unpkg.com/@studio-freight/lenis@1.0.33/dist/lenis.min.js');
 
-    // Initialize marquee after fonts are loaded
-    fontPromise.then(() => initMarqueeSystem());
-
-    // Load main image assets (clark, superman, logo)
+    // Only load the hero images (Clark, Superman, Logo)
     const imageKeys = Object.keys(CONFIG.images);
     const assetPromises = imageKeys.map(key => {
         return new Promise((resolve) => {
@@ -164,101 +169,126 @@ function startPreloading() {
             img.crossOrigin = "anonymous";
             img.src = CONFIG.images[key];
             img.onload = () => { state.assets[key] = img; resolve(); };
-            img.onerror = () => { console.warn(`Failed to load asset: ${CONFIG.images[key]}`); resolve(); }; // Resolve on error, don't block
+            img.onerror = () => { resolve(); };
         });
     });
 
-    // Decode all other DOM images for robust preloading
-    const domImages = Array.from(document.querySelectorAll('img'));
-    const decodePromises = domImages.map(img => {
-        return img.decode().catch(error => {
-            console.warn(`Failed to decode image: ${img.src || 'unknown'}`, error);
-            // Fallback for decode failure: use onload/onerror, resolve after a timeout if those don't fire quickly
-            return new Promise(resolve => {
-                const timer = setTimeout(() => {
-                    console.warn(`Image decode/load fallback timed out for: ${img.src || 'unknown'}`);
-                    resolve();
-                }, 2000); // Max 2 seconds for fallback load
-                img.onload = () => { clearTimeout(timer); resolve(); };
-                img.onerror = () => { clearTimeout(timer); console.warn(`Image load failed for: ${img.src || 'unknown'}`); resolve(); };
-                // If the image is already complete (e.g., cached), onload/onerror might not fire immediately
-                if (img.complete) { clearTimeout(timer); resolve(); }
-            });
-        });
-    });
-
-    // Vanta initialization promise: depends on vantaDepsPromise
-    const vantaInitPromise = loadVantaDependencies()
-        .then(() => {
-            // Add a small buffer to ensure scripts are parsed
-            return new Promise(resolve => setTimeout(resolve, 100));
-        })
-        .then(() => {
-            return new Promise(resolve => {
-                // Check if the library and the element exist
-                if (window.VANTA && DOM.timeline.sticky) {
-                    try {
-                        state.vanta = VANTA.CLOUDS({
-                            el: DOM.timeline.sticky,
-                            mouseControls: true,
-                            touchControls: true,
-                            gyroControls: false,
-                            minHeight: 200.00,
-                            minWidth: 200.00,
-                            skyColor: CONFIG.colors.sky,
-                            cloudColor: CONFIG.colors.cloud,
-                            cloudShadowColor: CONFIG.colors.shadow,
-                            sunColor: CONFIG.colors.sun,
-                            sunGlareColor: CONFIG.colors.glare,
-                            sunlightColor: 0xffffff,
-                            speed: 0.3
-                        });
-                        console.log("Vanta initialized successfully.");
-                    } catch (e) {
-                        console.error("Vanta threw an error during init:", e);
-                    }
-                } else {
-                    console.warn("VANTA object or target element missing.");
-                }
-                resolve(); // Always resolve so loader doesn't hang
-            });
-        })
-        .catch(error => {
-            console.error("Vanta dependency loading failed:", error);
-            return Promise.resolve(); // Continue application even if background fails
-        });
-
-    const allPromises = [
+    const criticalPromises = [
         fontPromise,
         lenisPromise,
         ...assetPromises,
-        ...decodePromises,
-        vantaInitPromise,
         document.fonts.ready
     ];
 
-    let loaded = 0;
-    const total = allPromises.length;
+    // B. Smooth Progress Bar Logic (Decoupled Math)
+    let loadedCount = 0;
+    const totalCritical = criticalPromises.length;
+    let targetProgress = 0;
+    let currentProgress = 0;
+    let animationFrameId;
 
-    allPromises.forEach(p => p.then(() => {
-        loaded++;
-        if (DOM.loader.bar) {
-            const pct = Math.round((loaded / total) * 100);
-            DOM.loader.bar.style.width = `${pct}%`;
+    // The Animation Loop
+    function updateLoaderUI() {
+        const diff = targetProgress - currentProgress;
+
+        // Only update if there is a change needed
+        if (Math.abs(diff) > 0.05) {
+            // Move 10% of the remaining distance each frame
+            currentProgress += diff * 0.1;
+            if (DOM.loader.bar) {
+                DOM.loader.bar.style.width = `${currentProgress}%`;
+            }
+        } else if (targetProgress === 100 && currentProgress < 100) {
+            // If the target is 100 and we're close, just snap to the end
+            currentProgress = 100;
+            if (DOM.loader.bar) {
+                DOM.loader.bar.style.width = '100%';
+            }
         }
-    }).catch(e => {
-        loaded++; // Increment anyway so bar finishes
-        if (DOM.loader.bar) DOM.loader.bar.style.width = `${Math.round((loaded / total) * 100)}%`;
+
+        // CRITICAL FIX: Keep the animation running until we are done.
+        // The request for the next frame must be OUTSIDE the conditional.
+        if (currentProgress < 100) {
+            animationFrameId = requestAnimationFrame(updateLoaderUI);
+        } else {
+            // Optional: clean up the animation frame when it's no longer needed
+            if (animationFrameId) {
+                cancelAnimationFrame(animationFrameId);
+            }
+        }
+    }
+
+    // Start the loop
+    updateLoaderUI();
+
+    // Hook promises to the counter
+    criticalPromises.forEach(p => p.then(() => {
+        loadedCount++;
+        targetProgress = Math.round((loadedCount / totalCritical) * 100);
     }));
 
+    // C. The "Artificial" Delay (UX polish)
+    // We wait for all promises OR 1.5 seconds, whichever is longer.
     const minTimePromise = new Promise(r => setTimeout(r, 1500));
 
-    return Promise.all([Promise.all(allPromises), minTimePromise]).then(() => {
-        if (DOM.loader.bar) DOM.loader.bar.style.width = '100%';
-        document.body.classList.add('loaded');
-        document.body.style.overflow = '';
-        handleResize();
+    // Wait for Fonts to load, then init marquee immediately (visual polish)
+    fontPromise.then(() => initMarqueeSystem());
+
+    return Promise.all([Promise.all(criticalPromises), minTimePromise]).then(() => {
+        targetProgress = 100;
+        // Give the bar a moment to fill visually to 100% before resolving
+        return new Promise(r => setTimeout(r, 400));
     });
+}
+
+function revealApp() {
+    document.body.classList.add('loaded');
+    document.body.style.overflow = '';
+    handleResize();
+}
+
+function loadBackgroundAssets() {
+    // 1. Initialize Vanta (Clouds)
+    loadVantaDependencies()
+        .then(() => {
+            return new Promise(resolve => setTimeout(resolve, 100));
+        })
+        .then(() => {
+            if (window.VANTA && DOM.timeline.sticky) {
+                try {
+                    state.vanta = VANTA.CLOUDS({
+                        el: DOM.timeline.sticky,
+                        mouseControls: true,
+                        touchControls: true,
+                        gyroControls: false,
+                        minHeight: 200.00,
+                        minWidth: 200.00,
+                        skyColor: CONFIG.colors.sky,
+                        cloudColor: CONFIG.colors.cloud,
+                        cloudShadowColor: CONFIG.colors.shadow,
+                        sunColor: CONFIG.colors.sun,
+                        sunGlareColor: CONFIG.colors.glare,
+                        sunlightColor: 0xffffff,
+                        speed: 0.3
+                    });
+                    // Fade in the canvas so it doesn't pop
+                    const vantaCanvas = DOM.timeline.sticky.querySelector('.vanta-canvas');
+                    if (vantaCanvas) {
+                        vantaCanvas.style.opacity = 0;
+                        vantaCanvas.style.transition = 'opacity 2s ease';
+                        requestAnimationFrame(() => vantaCanvas.style.opacity = 1);
+                    }
+                } catch (e) { console.warn("Vanta init error", e); }
+            }
+        });
+
+    // 2. Decode remaining DOM images quietly
+    const otherImages = Array.from(document.querySelectorAll('img:not([fetchpriority="high"])'));
+    if ('decode' in Image.prototype) {
+        otherImages.forEach(img => {
+            img.decode().catch(() => { });
+        });
+    }
 }
 
 function setupApp() {
@@ -780,26 +810,6 @@ function generatePhantomZone() {
                 p.update();
                 p.draw();
             });
-
-            const maxDist = CONFIG.archive.connectionDist;
-
-            for (let i = 0; i < particles.length; i++) {
-                for (let j = i + 1; j < particles.length; j++) {
-                    const dx = particles[i].x - particles[j].x;
-                    const dy = particles[i].y - particles[j].y;
-                    const dist = Math.hypot(dx, dy);
-
-                    if (dist < maxDist) {
-                        const opacity = 1 - (dist / maxDist);
-                        ctx.strokeStyle = `rgba(${colLine}, ${opacity * 0.15})`;
-                        ctx.lineWidth = 1;
-                        ctx.beginPath();
-                        ctx.moveTo(particles[i].x, particles[i].y);
-                        ctx.lineTo(particles[j].x, particles[j].y);
-                        ctx.stroke();
-                    }
-                }
-            }
         } else if (!isVisible) {
             frameCounter = -1; // Set to -1 because it will be incremented to 0
         }
