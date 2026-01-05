@@ -13,11 +13,6 @@ const CONFIG = {
         logo: 'images/superman-logo.avif'
     },
     colors: {
-        sky: 0x2b6fb5,
-        cloud: 0xdcebf7,
-        shadow: 0x183655,
-        sun: 0xffe600,
-        glare: 0xff3838,
         archiveNode: 0xffffff,
         archiveLine: 0xdcebf7
     },
@@ -47,7 +42,7 @@ const DOM = {
     },
     timeline: {
         section: document.querySelector('.timeline-section'),
-        sticky: document.getElementById('vantaCanvas'),
+        sticky: document.querySelector('.timeline-sticky'), // Updated selector
         track: document.getElementById('horizontalTrack'),
         images: document.querySelectorAll('.parallax-img')
     },
@@ -81,7 +76,6 @@ const state = {
     particles: [],
     idleTimer: null,
     lenis: null,
-    vanta: null,
     archiveRequestFrame: null
 };
 
@@ -111,8 +105,7 @@ function init() {
         setupObservers();
         animate();
 
-        // 4. Load Heavy/Non-Critical items in background (Vanta, Bottom Images)
-        // This prevents the "All-or-Nothing" bottleneck
+        // 4. Load remaining assets
         setTimeout(loadBackgroundAssets, 200);
     });
 }
@@ -140,20 +133,6 @@ function loadGoogleFonts() {
     });
 }
 
-function loadVantaDependencies() {
-    // 1. Load Three.js first
-    return loadScript('https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js')
-        .then(() => {
-            // Check if Three.js is actually in the window
-            if (!window.THREE) {
-                throw new Error("Three.js loaded but window.THREE is missing");
-            }
-            // 2. Load Vanta ONLY after Three.js is ready
-            return loadScript('https://cdn.jsdelivr.net/npm/vanta@latest/dist/vanta.clouds.min.js');
-        });
-}
-
-
 function startCriticalPreloading() {
     document.body.style.overflow = 'hidden';
 
@@ -180,7 +159,7 @@ function startCriticalPreloading() {
         document.fonts.ready
     ];
 
-    // B. Smooth Progress Bar Logic (Decoupled Math)
+    // B. Smooth Progress Bar Logic
     let loadedCount = 0;
     const totalCritical = criticalPromises.length;
     let targetProgress = 0;
@@ -191,52 +170,39 @@ function startCriticalPreloading() {
     function updateLoaderUI() {
         const diff = targetProgress - currentProgress;
 
-        // Only update if there is a change needed
         if (Math.abs(diff) > 0.05) {
-            // Move 10% of the remaining distance each frame
             currentProgress += diff * 0.1;
             if (DOM.loader.bar) {
                 DOM.loader.bar.style.width = `${currentProgress}%`;
             }
         } else if (targetProgress === 100 && currentProgress < 100) {
-            // If the target is 100 and we're close, just snap to the end
             currentProgress = 100;
             if (DOM.loader.bar) {
                 DOM.loader.bar.style.width = '100%';
             }
         }
 
-        // CRITICAL FIX: Keep the animation running until we are done.
-        // The request for the next frame must be OUTSIDE the conditional.
         if (currentProgress < 100) {
             animationFrameId = requestAnimationFrame(updateLoaderUI);
         } else {
-            // Optional: clean up the animation frame when it's no longer needed
             if (animationFrameId) {
                 cancelAnimationFrame(animationFrameId);
             }
         }
     }
 
-    // Start the loop
     updateLoaderUI();
 
-    // Hook promises to the counter
     criticalPromises.forEach(p => p.then(() => {
         loadedCount++;
         targetProgress = Math.round((loadedCount / totalCritical) * 100);
     }));
 
-    // C. The "Artificial" Delay (UX polish)
-    // We wait for all promises OR 1.5 seconds, whichever is longer.
     const minTimePromise = new Promise(r => setTimeout(r, 1500));
-
-    // Wait for Fonts to load, then init marquee immediately (visual polish)
     fontPromise.then(() => initMarqueeSystem());
 
     return Promise.all([Promise.all(criticalPromises), minTimePromise]).then(() => {
         targetProgress = 100;
-        // Give the bar a moment to fill visually to 100% before resolving
         return new Promise(r => setTimeout(r, 400));
     });
 }
@@ -248,41 +214,7 @@ function revealApp() {
 }
 
 function loadBackgroundAssets() {
-    // 1. Initialize Vanta (Clouds)
-    loadVantaDependencies()
-        .then(() => {
-            return new Promise(resolve => setTimeout(resolve, 100));
-        })
-        .then(() => {
-            if (window.VANTA && DOM.timeline.sticky) {
-                try {
-                    state.vanta = VANTA.CLOUDS({
-                        el: DOM.timeline.sticky,
-                        mouseControls: true,
-                        touchControls: true,
-                        gyroControls: false,
-                        minHeight: 200.00,
-                        minWidth: 200.00,
-                        skyColor: CONFIG.colors.sky,
-                        cloudColor: CONFIG.colors.cloud,
-                        cloudShadowColor: CONFIG.colors.shadow,
-                        sunColor: CONFIG.colors.sun,
-                        sunGlareColor: CONFIG.colors.glare,
-                        sunlightColor: 0xffffff,
-                        speed: 0.3
-                    });
-                    // Fade in the canvas so it doesn't pop
-                    const vantaCanvas = DOM.timeline.sticky.querySelector('.vanta-canvas');
-                    if (vantaCanvas) {
-                        vantaCanvas.style.opacity = 0;
-                        vantaCanvas.style.transition = 'opacity 2s ease';
-                        requestAnimationFrame(() => vantaCanvas.style.opacity = 1);
-                    }
-                } catch (e) { console.warn("Vanta init error", e); }
-            }
-        });
-
-    // 2. Decode remaining DOM images quietly
+    // Decode remaining DOM images quietly
     const otherImages = Array.from(document.querySelectorAll('img:not([fetchpriority="high"])'));
     if ('decode' in Image.prototype) {
         otherImages.forEach(img => {
@@ -352,8 +284,6 @@ function updateScrollDrivenLogic() {
     if (DOM.rivalry.section) {
         updateRivalryScroll();
     }
-
-    // NOTE: Newspaper tilt logic removed to keep it flat/fullscreen
 }
 
 function updateHeroVisuals(progress) {
@@ -373,30 +303,21 @@ function updateHeroVisuals(progress) {
 }
 
 function updateTimelineScroll() {
-    // Safety check
     if (!DOM.timeline.section || !DOM.timeline.track) return;
 
     const rect = DOM.timeline.section.getBoundingClientRect();
     const vpW = state.width;
     const vpH = state.height;
 
-    // Calculate total scrollable distance (height of section minus 1 viewport)
     const dist = DOM.timeline.section.offsetHeight - vpH;
-
-    // Calculate how far the horizontal track needs to move
-    // We subtract vpW because we want the end of the track to hit the right side of screen
     const maxTrans = DOM.timeline.track.scrollWidth - vpW;
 
-    // 0 to 1 progress based on scroll position
     let progress = -rect.top / dist;
     progress = Math.max(0, Math.min(1, progress));
 
     let x = 0;
 
-    // Logic: If section hasn't hit top, keep it centered or static. 
-    // Once sticky kicks in (rect.top <= 0), move it.
     if (rect.top > 0) {
-        // Optional: slight entry animation
         x = 0;
     } else {
         x = - (maxTrans * progress);
@@ -404,7 +325,6 @@ function updateTimelineScroll() {
 
     DOM.timeline.track.style.transform = `translateX(${x}px)`;
 
-    // Disable parallax scale on mobile for performance
     const scale = window.innerWidth < 768 ? 1.0 : 1.1;
     DOM.timeline.images.forEach(img => img.style.transform = `scale(${scale})`);
 }
@@ -526,7 +446,6 @@ function handleResize() {
     state.width = window.innerWidth;
     state.height = window.innerHeight;
 
-    // Canvas resizing
     [DOM.canvas.main, ctxs.clark.canvas, ctxs.super.canvas, ctxs.mask.canvas].forEach(c => {
         c.width = state.width;
         c.height = state.height;
@@ -541,12 +460,9 @@ function handleResize() {
     };
 
     if (state.assets.clark && state.assets.superman) prepareBackgrounds();
-    if (state.vanta) state.vanta.resize(); // Vanta resize only if it successfully initialized
 
-    // --- RESPONSIVE LOGIC ADDITION ---
-    // Recalculate horizontal track explicitly
     if (DOM.timeline.track) {
-        DOM.timeline.track.style.width = 'max-content'; // Ensure it expands
+        DOM.timeline.track.style.width = 'max-content';
     }
 }
 
@@ -740,7 +656,6 @@ function generatePhantomZone() {
     let particles = [];
 
     const colNode = hexToRgb(CONFIG.colors.archiveNode);
-    const colLine = hexToRgb(CONFIG.colors.archiveLine);
 
     const resize = () => {
         w = container.offsetWidth;
@@ -798,7 +713,7 @@ function generatePhantomZone() {
     const throttleRate = 2;
 
     function animate() {
-        state.archiveRequestFrame = requestAnimationFrame(animate); // Always request next frame
+        state.archiveRequestFrame = requestAnimationFrame(animate);
 
         const rect = container.getBoundingClientRect();
         const isVisible = (rect.bottom > 0 && rect.top < window.innerHeight);
@@ -811,7 +726,7 @@ function generatePhantomZone() {
                 p.draw();
             });
         } else if (!isVisible) {
-            frameCounter = -1; // Set to -1 because it will be incremented to 0
+            frameCounter = -1;
         }
         frameCounter++;
     }
@@ -829,31 +744,25 @@ function setupLinks() {
         const hoverText = element.dataset.hover || text;
         element.innerHTML = '';
         if (element.classList.contains('portfolio-link__name')) {
-            // Keep data-hover for portfolio, remove for footer links
         } else {
             element.removeAttribute('data-hover');
         }
 
-        // Split text into characters
         const chars = text.split('');
         const hoverChars = hoverText.split('');
 
         chars.forEach((char, index) => {
-            // Create container for the character pair
             const container = document.createElement('span');
             container.className = 'char-box';
-            container.style.setProperty('--i', index); // Index for stagger delay
+            container.style.setProperty('--i', index);
 
-            // Handle spaces explicitly
             const displayChar = char === ' ' ? '&nbsp;' : char;
             const hoverChar = hoverChars[index] === ' ' ? '&nbsp;' : (hoverChars[index] || displayChar);
 
-            // Top letter (Initial)
             const topSpan = document.createElement('span');
             topSpan.className = 'char-top';
             topSpan.innerHTML = displayChar;
 
-            // Bottom letter (Hover state)
             const bottomSpan = document.createElement('span');
             bottomSpan.className = 'char-bottom';
             bottomSpan.innerHTML = hoverChar;

@@ -58,11 +58,8 @@ html {
 
 ::-webkit-scrollbar-thumb {
     background-color: var(--color-accent-red);
-
     border: 2px solid var(--color-bg-black);
-
     border-radius: 0;
-
     transition: background-color 0.3s ease, box-shadow 0.3s ease;
 }
 
@@ -214,13 +211,11 @@ body:not(.loaded) .timeline-sticky {
 .loader__progress-track {
     width: 200px;
     height: 2px;
-    background-image: repeating-linear-gradient(
-        110deg,
-        var(--color-stroke),
-        var(--color-stroke) 10px,
-        var(--color-bg-black) 10px,
-        var(--color-bg-black) 20px
-    );
+    background-image: repeating-linear-gradient(110deg,
+            var(--color-stroke),
+            var(--color-stroke) 10px,
+            var(--color-bg-black) 10px,
+            var(--color-bg-black) 20px);
     position: relative;
     overflow: hidden;
 }
@@ -231,15 +226,13 @@ body:not(.loaded) .timeline-sticky {
     left: 0;
     height: 100%;
     width: 0%;
-    background-image: repeating-linear-gradient(
-        110deg,
-        var(--color-accent-red),
-        var(--color-accent-red) 10px,
-        transparent 10px,
-        transparent 20px
-    );
+    background-image: repeating-linear-gradient(110deg,
+            var(--color-accent-red),
+            var(--color-accent-red) 10px,
+            transparent 10px,
+            transparent 20px);
     box-shadow: 0 0 15px var(--color-accent-red);
-    transition: none; 
+    transition: none;
 }
 
 .loader__text {
@@ -488,6 +481,17 @@ canvas {
     z-index: 1;
 }
 
+.timeline-bg {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    z-index: 0;
+    opacity: 1.0;
+}
+
 .timeline-sticky::after {
     content: '';
     position: absolute;
@@ -539,6 +543,8 @@ canvas {
     border-bottom: 1px solid #0d1e30;
     padding-bottom: 5px;
     width: fit-content;
+    position: relative;
+    z-index: 1;
 }
 
 .timeline-card__meta--clean {
@@ -589,6 +595,8 @@ canvas {
     font-size: clamp(2rem, 4vw, 4rem);
     line-height: 1.1;
     color: var(--color-bg-dark);
+    position: relative;
+    z-index: 1;
 }
 
 .timeline-card--quote p em {
