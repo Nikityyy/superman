@@ -113,6 +113,14 @@ body:not(.loaded) .timeline-sticky {
     pointer-events: none !important;
 }
 
+.timeline-section,
+.rivalry-section,
+.archive-section,
+.newspaper-section,
+.gang-section {
+    content-visibility: auto;
+}
+
 .portfolio-link {
     position: absolute;
     top: 40px;
@@ -300,6 +308,8 @@ body.loaded .loader__content {
     width: 100%;
     transform: translate3d(0, 0, 0) rotate(-2deg) scale(1.1);
     padding-bottom: 2.5dvh;
+    will-change: transform;
+    backface-visibility: hidden;
 }
 
 .marquee-track {
@@ -395,6 +405,7 @@ canvas {
     display: block;
     color: #fff;
     transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+    will-change: opacity, transform, filter;
 }
 
 .hero-logo__name--clark {
@@ -524,6 +535,7 @@ canvas {
 
 .timeline-card--wide {
     width: var(--card-width-wide);
+    margin-right: 10vw;
 }
 
 .timeline-card--quote {
@@ -574,6 +586,14 @@ canvas {
     transform: translate3d(0, 0, 0);
     backface-visibility: hidden;
     -webkit-optimize-contrast: true;
+}
+
+.marquee-track,
+.hero-logo,
+.loader__logo,
+.cape-visual {
+    will-change: transform;
+    transform: translate3d(0, 0, 0);
 }
 
 .parallax-img {
@@ -1981,6 +2001,33 @@ canvas {
     .archive-section {
         margin-bottom: -20px;
     }
+
+    /* --- 4. RIVALRY --- */
+    .rivalry-text-row {
+        font-size: 20vw;
+        /* Stacked text needs to be smaller or wrap */
+    }
+
+    .rivalry-center-text {
+        z-index: 25;
+        /* Bring text above images on mobile */
+    }
+
+    /* Move images to background/opacity on mobile to keep text readable */
+    .rivalry-img {
+        height: 50vh;
+        max-width: 80vw;
+    }
+
+    .rivalry-img--left {
+        top: 0;
+        /* Move up */
+        left: -10%;
+    }
+
+    .rivalry-img--right {
+        right: -10%;
+    }
 }
 
 @media (max-width: 768px) {
@@ -2045,33 +2092,6 @@ canvas {
 
     .timeline-card--quote p {
         font-size: 8vw;
-    }
-
-    /* --- 4. RIVALRY --- */
-    .rivalry-text-row {
-        font-size: 20vw;
-        /* Stacked text needs to be smaller or wrap */
-    }
-
-    .rivalry-center-text {
-        z-index: 25;
-        /* Bring text above images on mobile */
-    }
-
-    /* Move images to background/opacity on mobile to keep text readable */
-    .rivalry-img {
-        height: 50vh;
-        max-width: 80vw;
-    }
-
-    .rivalry-img--left {
-        top: 0;
-        /* Move up */
-        left: -20%;
-    }
-
-    .rivalry-img--right {
-        right: -20%;
     }
 
     /* --- 5. NEWSPAPER (CRITICAL FIX) --- */

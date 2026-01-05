@@ -76,7 +76,9 @@ const state = {
     particles: [],
     idleTimer: null,
     lenis: null,
-    archiveRequestFrame: null
+    archiveRequestFrame: null,
+    isHeroVisible: true,
+    isPhantomVisible: false
 };
 
 // --- OFFSCREEN CANVASES ---
@@ -108,6 +110,21 @@ function init() {
         // 4. Load remaining assets
         setTimeout(loadBackgroundAssets, 200);
     });
+}
+
+function setupVisibilityObservers() {
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.target === DOM.canvas.scrollTrack) {
+                state.isHeroVisible = entry.isIntersecting;
+            } else if (entry.target === DOM.archive.bg) {
+                state.isPhantomVisible = entry.isIntersecting;
+            }
+        });
+    }, { rootMargin: "200px" });
+
+    if (DOM.canvas.scrollTrack) observer.observe(DOM.canvas.scrollTrack);
+    if (DOM.archive.bg) observer.observe(DOM.archive.bg);
 }
 
 // Helper to load external scripts
@@ -236,6 +253,7 @@ function setupApp() {
     generatePhantomZone();
     setupLinks();
     setupArchiveClicks();
+    setupVisibilityObservers();
 
     window.addEventListener('resize', handleResize);
     window.addEventListener('mousemove', handleMouseMove);
@@ -252,35 +270,36 @@ function setupApp() {
 
 function animate(time) {
     state.lenis.raf(time);
+
     updateScrollDrivenLogic();
-    updateCanvasPhysics();
-    renderCanvas();
+
+    if (state.isHeroVisible) {
+        updateCanvasPhysics();
+        renderCanvas();
+    }
+
     requestAnimationFrame(animate);
 }
 
 function updateScrollDrivenLogic() {
     const scrollTop = window.scrollY || document.documentElement.scrollTop;
 
-    // 1. Hero Wipe
-    if (DOM.canvas.scrollTrack) {
+    if (state.isHeroVisible && DOM.canvas.scrollTrack) {
         const max = DOM.canvas.scrollTrack.offsetHeight - window.innerHeight;
         state.scrollProgress = Math.max(0, Math.min(1, scrollTop / max));
         updateHeroVisuals(state.scrollProgress);
     }
 
-    // 2. Parallax Logo
-    if (DOM.transition.logo) {
+    if (state.isHeroVisible && DOM.transition.logo) {
         const rect = DOM.transition.section.getBoundingClientRect();
         const offset = (window.innerHeight / 2) - (rect.top + rect.height / 2);
         DOM.transition.logo.style.transform = `translate(-50%, calc(-50% + ${offset * -0.15}px))`;
     }
 
-    // 3. Horizontal Timeline
     if (DOM.timeline.section) {
         updateTimelineScroll();
     }
 
-    // 4. Rivalry Slide
     if (DOM.rivalry.section) {
         updateRivalryScroll();
     }
@@ -657,6 +676,17 @@ function generatePhantomZone() {
 
     const colNode = hexToRgb(CONFIG.colors.archiveNode);
 
+    function initParticles() {
+        particles = [];
+        const count = window.innerWidth < 768
+            ? CONFIG.archive.countMobile
+            : CONFIG.archive.count;
+
+        for (let i = 0; i < count; i++) {
+            particles.push(new DataNode());
+        }
+    }
+
     const resize = () => {
         w = container.offsetWidth;
         h = container.offsetHeight;
@@ -698,16 +728,6 @@ function generatePhantomZone() {
         }
     }
 
-    function initParticles() {
-        particles = [];
-        const count = window.innerWidth < 768
-            ? CONFIG.archive.countMobile
-            : CONFIG.archive.count;
-
-        for (let i = 0; i < count; i++) {
-            particles.push(new DataNode());
-        }
-    }
 
     let frameCounter = 0;
     const throttleRate = 2;
@@ -715,24 +735,19 @@ function generatePhantomZone() {
     function animate() {
         state.archiveRequestFrame = requestAnimationFrame(animate);
 
-        const rect = container.getBoundingClientRect();
-        const isVisible = (rect.bottom > 0 && rect.top < window.innerHeight);
-
-        if (isVisible && frameCounter % throttleRate === 0) {
+        if (state.isPhantomVisible && frameCounter % throttleRate === 0) {
             ctx.clearRect(0, 0, w, h);
-
             particles.forEach(p => {
                 p.update();
                 p.draw();
             });
-        } else if (!isVisible) {
-            frameCounter = -1;
         }
         frameCounter++;
     }
 
-    window.addEventListener('resize', resize);
-    resize();
+    const resizeObserver = new ResizeObserver(() => resize());
+    resizeObserver.observe(container);
+
     animate();
 }
 
