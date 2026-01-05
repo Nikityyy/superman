@@ -1272,7 +1272,7 @@ canvas {
     font-size: 7vw;
     /* Condensed slab look */
     margin-bottom: 5px;
-    letter-spacing: -5px;
+    letter-spacing: -0.5vw;
 }
 
 .hl-mid {
@@ -1280,7 +1280,7 @@ canvas {
     /* Massive */
     text-transform: uppercase;
     margin-top: 10px;
-    letter-spacing: -10px;
+    letter-spacing: -1vw;
 }
 
 /* Article */
